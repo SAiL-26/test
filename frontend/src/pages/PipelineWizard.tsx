@@ -235,10 +235,13 @@ export default function PipelineWizard() {
       </div>
 
       {/* Body — sidebar collapses below the main pane on narrow viewports
-          (< 1280 px) so the wizard form keeps full content width on a
-          1280–1366 laptop. */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 px-6 pt-3 pb-2 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="surface relative flex min-h-0 min-w-0 flex-col overflow-hidden">
+          (< 1280 px). overflow-y-auto on the grid keeps the footer pinned
+          to the visible viewport even when the AI sidebar grows tall on
+          small monitors — without it, the stacked grid overflowed past
+          the footer and the 다음 단계 button got pushed off-screen on
+          1280-1440 displays. */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 overflow-y-auto px-6 pt-3 pb-2 xl:grid-cols-[minmax(0,1fr)_320px] xl:overflow-hidden">
+        <div className="surface relative flex min-h-[480px] min-w-0 flex-col overflow-hidden xl:min-h-0">
           <div className="flex-shrink-0 border-b border-line-soft px-7 pt-6 pb-3">
             <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">
               <step.icon className="h-3.5 w-3.5" />

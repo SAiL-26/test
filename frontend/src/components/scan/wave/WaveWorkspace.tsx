@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   fetchEnergyProfile, fetchMcmcBackground, fetchMcmcTrace,
@@ -104,7 +104,12 @@ export default function WaveWorkspace({ scenarioTag, detection }: Props) {
         speed={scrubSpeed} setSpeed={setScrubSpeed}
       />
 
-      {/* 3-row grid: top row 3 panes, mid row 3 panes, bottom row MCMC. */}
+      {/* 3-row grid: top row 3 panes, mid row 3 panes, bottom row MCMC.
+          Panes mount in waves so the browser can finish painting the top
+          row (and the surrounding chrome) before Plotly initializes 4+
+          more charts in parallel — without staggering, mounting 7 Plotly
+          instances in one synchronous tick froze the main thread for
+          1-2 s on the first scan-console visit. */}
       <div className="grid min-h-0 flex-1 grid-cols-12 grid-rows-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)] gap-2">
         <div className="col-span-4 min-h-0">
           <PaneBoundary name="Snapshot"><SnapshotGridPane caseId={caseId} times={times} controlledIdx={timeIdx} /></PaneBoundary>
@@ -116,18 +121,47 @@ export default function WaveWorkspace({ scenarioTag, detection }: Props) {
           <PaneBoundary name="GT vs Estimate"><TrueVsEstimatePane caseId={caseId} /></PaneBoundary>
         </div>
         <div className="col-span-4 min-h-0">
-          <PaneBoundary name="Energy profile"><EnergyProfilePane data={energy.data} onRxSelect={setSelectedRx} /></PaneBoundary>
+          <PaneBoundary name="Energy profile">
+            <DeferredMount delayMs={250}>
+              <EnergyProfilePane data={energy.data} onRxSelect={setSelectedRx} />
+            </DeferredMount>
+          </PaneBoundary>
         </div>
         <div className="col-span-4 min-h-0">
-          <PaneBoundary name="A/B wipe"><AbWipePane data={velocity.data} /></PaneBoundary>
+          <PaneBoundary name="A/B wipe">
+            <DeferredMount delayMs={350}>
+              <AbWipePane data={velocity.data} />
+            </DeferredMount>
+          </PaneBoundary>
         </div>
         <div className="col-span-4 min-h-0">
-          <PaneBoundary name="Screening surface"><ScreeningSurfacePane data={screen.data} /></PaneBoundary>
+          <PaneBoundary name="Screening surface">
+            <DeferredMount delayMs={450}>
+              <ScreeningSurfacePane data={screen.data} />
+            </DeferredMount>
+          </PaneBoundary>
         </div>
         <div className="col-span-12 min-h-0">
-          <PaneBoundary name="MCMC inversion"><InversionPane trace={mcmcTrace.data} background={mcmcBg.data} /></PaneBoundary>
+          <PaneBoundary name="MCMC inversion">
+            <DeferredMount delayMs={700}>
+              <InversionPane trace={mcmcTrace.data} background={mcmcBg.data} />
+            </DeferredMount>
+          </PaneBoundary>
         </div>
       </div>
     </div>
   )
+}
+
+/** Delay a child's mount so the main thread can paint the surrounding
+ *  chrome before kicking off another heavy initialization (typically a
+ *  Plotly chart). Renders a lightweight skeleton in the interim. */
+function DeferredMount({ delayMs, children }: { delayMs: number; children: React.ReactNode }) {
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    const t = window.setTimeout(() => setReady(true), delayMs)
+    return () => window.clearTimeout(t)
+  }, [delayMs])
+  if (!ready) return <div className="skeleton h-full w-full rounded-md" />
+  return <>{children}</>
 }
