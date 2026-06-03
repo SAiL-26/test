@@ -1,0 +1,26 @@
+# node_modules — rebuilt in container
+frontend/node_modules
+frontend/dist
+
+# python cache
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.mypy_cache
+
+# editor / OS
+.vscode
+.idea
+.DS_Store
+
+# logs
+*.log
+
+# env files (secrets) — set via fly secrets instead
+.env
+.env.local
+backend/.env
+
+# git
+.git
+.gitignore

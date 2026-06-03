@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>Dental Wave Viz — 사용 설명서</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Noto+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --c-bg: #ffffff;
+    --c-text: #0F1B2D;
+    --c-muted: #4C6272;
+    --c-faint: #8590A0;
+    --c-accent: #0B7BC4;
+    --c-line: #D8DDE2;
+    --c-good: #0E8A5F;
+    --c-warn: #C9761A;
+    --c-bad: #C8322B;
+    --c-finding: #DB2A6F;
+    --c-soft: #F6F8FA;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--c-soft); color: var(--c-text); }
+  body {
+    font-family: 'Inter', 'Noto Sans KR', -apple-system, 'Segoe UI', sans-serif;
+    font-size: 11pt;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .doc {
+    max-width: 800px;
+    margin: 40px auto;
+    background: white;
+    padding: 60px 64px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    border-radius: 6px;
+  }
+  /* Cover */
+  .cover {
+    text-align: center;
+    padding: 64px 0 80px;
+    border-bottom: 2px solid var(--c-accent);
+    margin-bottom: 56px;
+  }
+  .cover .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+    letter-spacing: 0.1em;
+    color: var(--c-accent);
+    text-transform: uppercase;
+  }
+  .cover h1 {
+    font-size: 32pt;
+    line-height: 1.15;
+    margin: 16px 0 12px;
+    color: var(--c-text);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .cover .subtitle {
+    font-size: 13pt;
+    color: var(--c-muted);
+    margin-bottom: 32px;
+    font-weight: 400;
+  }
+  .cover .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5pt;
+    color: var(--c-faint);
+    margin-top: 24px;
+  }
+  /* TOC */
+  .toc {
+    background: var(--c-soft);
+    border-left: 3px solid var(--c-accent);
+    padding: 20px 24px;
+    margin-bottom: 48px;
+  }
+  .toc h2 {
+    font-size: 10pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-muted);
+    margin: 0 0 12px;
+  }
+  .toc ol {
+    margin: 0; padding-left: 18px;
+    font-size: 10.5pt;
+    color: var(--c-text);
+  }
+  .toc ol li { padding: 3px 0; }
+  .toc ol a {
+    color: inherit; text-decoration: none;
+    border-bottom: 1px dotted transparent;
+    transition: border-color .12s;
+  }
+  .toc ol a:hover { border-bottom-color: var(--c-accent); }
+  /* Sections */
+  h2.sec {
+    color: var(--c-accent);
+    font-size: 18pt;
+    margin: 56px 0 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--c-line);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  h2.sec .num {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11pt;
+    color: var(--c-faint);
+    margin-right: 12px;
+    vertical-align: 1px;
+  }
+  h3 {
+    font-size: 12.5pt;
+    color: var(--c-text);
+    margin: 28px 0 6px;
+    font-weight: 600;
+  }
+  h4 {
+    font-size: 11pt;
+    color: var(--c-text);
+    margin: 18px 0 4px;
+    font-weight: 600;
+  }
+  p { margin: 10px 0; }
+  /* Highlights */
+  .lead {
+    font-size: 12pt;
+    color: var(--c-muted);
+    line-height: 1.7;
+    margin: 8px 0 24px;
+  }
+  .callout {
+    background: #F2F7FC;
+    border-left: 3px solid var(--c-accent);
+    padding: 14px 18px;
+    margin: 18px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 10.5pt;
+  }
+  .callout.warn { background: #FCF6EF; border-color: var(--c-warn); }
+  .callout.bad  { background: #FBF1F0; border-color: var(--c-bad); }
+  .callout.good { background: #EEF7F3; border-color: var(--c-good); }
+  .callout .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--c-accent);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .callout.warn .label { color: var(--c-warn); }
+  .callout.bad  .label { color: var(--c-bad); }
+  .callout.good .label { color: var(--c-good); }
+  /* Lists */
+  ul, ol { padding-left: 22px; margin: 8px 0; }
+  ul li, ol li { margin: 4px 0; }
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 20px;
+    font-size: 10pt;
+  }
+  table th, table td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--c-line);
+    vertical-align: top;
+  }
+  table th {
+    color: var(--c-muted);
+    font-weight: 600;
+    background: var(--c-soft);
+    font-size: 9.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  table td.mono { font-family: 'JetBrains Mono', monospace; color: var(--c-text); }
+  /* Code */
+  code, .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.92em;
+    background: var(--c-soft);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--c-text);
+  }
+  /* Step boxes */
+  .step {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 16px;
+    margin: 14px 0;
+    align-items: start;
+  }
+  .step .num {
+    background: var(--c-accent);
+    color: white;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10pt;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .step .body {
+    padding-top: 1px;
+  }
+  .step .body strong { color: var(--c-text); }
+  /* KPI / pill */
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 9pt;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .pill.good { background: #E6F5EF; color: var(--c-good); }
+  .pill.warn { background: #FBF1E2; color: var(--c-warn); }
+  .pill.bad  { background: #FBE7E5; color: var(--c-bad); }
+  /* Glossary */
+  .glossary dt {
+    font-weight: 600;
+    color: var(--c-accent);
+    margin-top: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+  }
+  .glossary dd {
+    margin: 4px 0 0 0;
+    color: var(--c-text);
+    padding-left: 0;
+  }
+  /* Footer */
+  .footer {
+    margin-top: 64px;
+    padding-top: 16px;
+    border-top: 1px solid var(--c-line);
+    font-size: 9pt;
+    color: var(--c-faint);
+    text-align: center;
+  }
+  .print-tip {
+    background: #F2F7FC;
+    border: 1px solid #C5DBED;
+    padding: 14px 18px;
+    border-radius: 4px;
+    font-size: 10pt;
+    color: var(--c-muted);
+    margin: 24px 0;
+  }
+  .print-tip strong { color: var(--c-accent); }
+  @media print {
+    body { background: white; font-size: 10.5pt; }
+    .doc {
+      max-width: none; margin: 0; padding: 14mm 18mm;
+      box-shadow: none; border-radius: 0;
+    }
+    .print-tip { display: none; }
+    .toc { page-break-after: always; }
+    h2.sec { page-break-before: always; margin-top: 0; }
+    h2.sec:first-of-type { page-break-before: avoid; }
+    a { color: inherit; text-decoration: none; }
+    @page { margin: 16mm 18mm 18mm; size: A4 portrait; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc">
+
+<div class="print-tip">
+  <strong>PDF로 저장하려면:</strong> 브라우저의 인쇄 메뉴 (Ctrl/⌘ + P) → 대상을 "PDF로 저장"으로 선택 → 인쇄.
+  Word 파일이 필요하다면 본 페이지 내용을 복사해 Word 문서에 붙여넣기 하면 서식과 함께 유지됩니다.
+</div>
+
+<!-- ───────────── COVER ───────────── -->
+<section class="cover">
+  <div class="eyebrow">User Manual · 임상의 안내서</div>
+  <h1>Dental Wave Viz</h1>
+  <div class="subtitle">30&nbsp;kHz 탄성파 기반 비침습 치은 병변 스크리닝 콘솔 사용 설명서</div>
+  <div class="meta">v1.0 · 임상의용 안내서</div>
+</section>
+
+<!-- ───────────── TOC ───────────── -->
+<nav class="toc">
+  <h2>차례</h2>
+  <ol>
+    <li><a href="#s1">시스템 개요</a></li>
+    <li><a href="#s2">시작하기 — 로그인과 첫 화면</a></li>
+    <li><a href="#s3">환자 목록 / 트리아지</a></li>
+    <li><a href="#s4">스캔 분석 화면 구성</a></li>
+    <li><a href="#s5">KPI 지표 읽기</a></li>
+    <li><a href="#s6">시간축 스크러버 사용법</a></li>
+    <li><a href="#s7">6개 분석 패널 사용법</a></li>
+    <li><a href="#s8">카메라 프리셋</a></li>
+    <li><a href="#s9">케이스 비교 모드</a></li>
+    <li><a href="#s10">파이프라인 스토리 모드</a></li>
+    <li><a href="#s11">재계산 기능</a></li>
+    <li><a href="#s12">보고서 PDF 다운로드</a></li>
+    <li><a href="#s13">의사 코멘트</a></li>
+    <li><a href="#s14">용어 사전</a></li>
+    <li><a href="#s15">한계와 면책 사항</a></li>
+  </ol>
+</nav>
+
+<!-- ───────────── 1 ───────────── -->
+<h2 class="sec" id="s1"><span class="num">01</span>시스템 개요</h2>
+<p class="lead">
+  Dental Wave Viz는 치은 부위에 30&nbsp;kHz 탄성파를 가했을 때의 파동 전파 결과를
+  분석하여 치은 병변 후보 영역을 추정하는 비침습 스크리닝 워크플로우를
+  의사가 시각적으로 검토할 수 있도록 만든 데모 콘솔입니다.
+</p>
+
+<h3>본 시스템이 보여주는 것</h3>
+<ul>
+  <li>3D 구강 구조 모델 위에서의 파동장 전파 양상</li>
+  <li>수신기 100개에서 기록된 시계열(시지모그램)</li>
+  <li>시간 누적 에너지 분포에 기반한 후보 영역 스크리닝</li>
+  <li>Bayesian 역산을 통한 병변 위치 사후분포</li>
+  <li>참값 대비 추정값의 정량 오차 (시뮬레이션 데이터에 한함)</li>
+</ul>
+
+<h3>본 시스템이 보여주지 않는 것</h3>
+<ul>
+  <li>실제 환자의 임상 영상 (CBCT/STL 합성 시뮬레이션 데이터 사용)</li>
+  <li>치주낭 깊이(PPD), 부착 소실(CAL), 출혈(BoP) 등 기존 임상 지표</li>
+  <li>병리학적 확진 결과</li>
+</ul>
+
+<div class="callout bad">
+  <span class="label">중요 · 면책</span>
+  본 시스템은 <strong>시뮬레이션 데이터만</strong>을 이용한 PoC(Proof-of-Concept)
+  단계의 데모입니다. 모든 환자 / 스캔 / 병변 정보는 합성된 가상의 케이스이며,
+  표시되는 결과를 실제 임상 의사결정의 단일 근거로 사용해서는 안 됩니다.
+</div>
+
+<!-- ───────────── 2 ───────────── -->
+<h2 class="sec" id="s2"><span class="num">02</span>시작하기 — 로그인과 첫 화면</h2>
+
+<h3>접속</h3>
+<p>웹 브라우저(Chrome, Edge, Safari 권장)에서 다음 주소로 접속합니다.</p>
+<p><code>https://dental-wave-viz-willy.fly.dev/</code></p>
+
+<h3>데모 계정</h3>
+<table>
+  <thead><tr><th>역할</th><th>이메일</th><th>비밀번호</th><th>접근 권한</th></tr></thead>
+  <tbody>
+    <tr><td>의사 (doctor)</td><td class="mono">doctor@demo.com</td><td class="mono">doctor123</td><td>전체 환자 / 코멘트 작성 / 재계산</td></tr>
+    <tr><td>환자 (patient)</td><td class="mono">patient2@demo.com</td><td class="mono">patient123</td><td>본인 스캔 열람만</td></tr>
+  </tbody>
+</table>
+
+<h3>좌측 네비게이션</h3>
+<ul>
+  <li><strong>Patients</strong> — 환자 목록 (메인 진입점)</li>
+  <li><strong>Runs</strong> — 전체 스캔 이력</li>
+  <li><strong>Evaluation</strong> — 시나리오별 데이터 인덱스</li>
+  <li><strong>Compare</strong> — 케이스 비교 워크스페이스</li>
+</ul>
+
+<!-- ───────────── 3 ───────────── -->
+<h2 class="sec" id="s3"><span class="num">03</span>환자 목록 / 트리아지</h2>
+
+<p>로그인 직후 표시되는 화면입니다. 등록된 환자들이 표 형태로 나열되며,
+상단에서 <strong>위험도</strong> 기준의 트리아지 구간 4개로 필터링할 수 있습니다.</p>
+
+<table>
+  <thead><tr><th>구간</th><th>최근 심각도</th><th>의미</th></tr></thead>
+  <tbody>
+    <tr><td><span class="pill bad">전문의 의뢰</span></td><td>≥ 80%</td><td>병변 가능성 높음 — 우선 검토</td></tr>
+    <tr><td><span class="pill warn">임상 검토</span></td><td>50–80%</td><td>의심 — 추가 검사 권고</td></tr>
+    <tr><td><span class="pill warn">경과 관찰</span></td><td>20–50%</td><td>경계 — 3개월 내 재검</td></tr>
+    <tr><td><span class="pill good">정상</span></td><td>&lt; 20%</td><td>정기 recall로 충분</td></tr>
+  </tbody>
+</table>
+
+<h3>이 화면에서 할 수 있는 것</h3>
+<ul>
+  <li>이름·MRN으로 환자 검색</li>
+  <li>최근 스캔 일자, 스캔 횟수, 최근 심각도 점수 일별 확인</li>
+  <li>행 클릭 → 환자 상세 (스캔 이력)</li>
+</ul>
+
+<!-- ───────────── 4 ───────────── -->
+<h2 class="sec" id="s4"><span class="num">04</span>스캔 분석 화면 구성</h2>
+
+<p>환자 상세에서 스캔 row를 클릭하면 분석 화면이 열립니다. 화면은 3열 구조입니다.</p>
+
+<h3>왼쪽 사이드바 — 스캔 메타정보</h3>
+<ul>
+  <li>환자 이름 / 스캔 ID / 스캔 일자</li>
+  <li>시나리오 배지 (정상 / 염증 70% / 염증 80%)</li>
+  <li><strong>음향 파라미터</strong> — 주파수, 신호 형태, 수신기 수, 해상도</li>
+  <li><strong>시나리오</strong> — 현재 케이스 라벨</li>
+  <li>주요 액션 버튼 3개:
+    <ul>
+      <li><strong>파이프라인 스토리</strong> — 6단계 워크스루 화면</li>
+      <li><strong>케이스 비교</strong> — 다른 시나리오와 나란히 비교</li>
+      <li><strong>보고서 PDF</strong> — 1페이지 영어 임상 양식 다운로드</li>
+    </ul>
+  </li>
+  <li>분석 파이프라인 6단계 요약 + 자세히 보기 링크</li>
+</ul>
+
+<h3>중앙 — 분석 워크스페이스</h3>
+<p>위에서 아래로 4개 영역으로 나뉩니다.</p>
+<ul>
+  <li><strong>케이스 토글</strong> — baseline / position / size 시나리오 선택 버튼</li>
+  <li><strong>KPI 스트립</strong> — 5개 정량 지표 카드 (5장 참조)</li>
+  <li><strong>시간축 스크러버</strong> — wavefield + seismogram 동기 제어</li>
+  <li><strong>6개 분석 패널</strong> — 3행 그리드 (7장 참조)</li>
+</ul>
+
+<h3>오른쪽 사이드바 — 탐지 결과</h3>
+<ul>
+  <li><strong>심각도 바</strong> — 0–100% 시각화</li>
+  <li>후보 수신기 번호, RMS 잔차, 추정 좌표(mm), 모델 빌드 버전</li>
+  <li><strong>역산 결과 요약</strong> — true / mode / best, 거리 |Δ|</li>
+  <li><strong>권고 액션</strong> — 심각도에 따른 자동 분류된 다음 단계</li>
+  <li><strong>의사 코멘트</strong> — 진단 소견 입력 (doctor 계정만)</li>
+  <li><strong>재계산</strong> 버튼 (우상단)</li>
+</ul>
+
+<!-- ───────────── 5 ───────────── -->
+<h2 class="sec" id="s5"><span class="num">05</span>KPI 지표 읽기</h2>
+
+<p>중앙 워크스페이스 상단에 표시되는 5개 카드입니다. 각 지표는 임계치를 넘으면 색이 바뀝니다.</p>
+
+<table>
+  <thead><tr><th>지표</th><th>의미</th><th>좋음 ✓</th><th>주의 ⚠</th><th>나쁨 ✗</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Localization err</strong></td>
+      <td>역산 추정 위치 ↔ 참값 거리 (mode − GT, voxel)</td>
+      <td>≤ 3 vox</td>
+      <td>3–6 vox</td>
+      <td>&gt; 6 vox</td>
+    </tr>
+    <tr>
+      <td><strong>Lesion severity</strong></td>
+      <td>병변 가능성 점수 (0% 정상 → 100% 확실)</td>
+      <td>&lt; 50%</td>
+      <td>50–80%</td>
+      <td>≥ 80%</td>
+    </tr>
+    <tr>
+      <td><strong>MCMC R̂</strong></td>
+      <td>체인 수렴 진단 (split-half 분산 비)</td>
+      <td>≤ 1.05</td>
+      <td>1.05–1.10</td>
+      <td>&gt; 1.10</td>
+    </tr>
+    <tr>
+      <td><strong>ESS</strong></td>
+      <td>유효 표본 크기 (고유 posterior state 수 / 1000)</td>
+      <td>≥ 200</td>
+      <td>100–200</td>
+      <td>&lt; 100</td>
+    </tr>
+    <tr>
+      <td><strong>Best misfit</strong></td>
+      <td>관측 데이터와 최적 모델의 잔차 (작을수록 정합 우수)</td>
+      <td colspan="3" style="color: var(--c-muted); font-style: italic;">절대값보다 케이스 간 상대 비교가 의미 있음</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <span class="label">읽는 법 요약</span>
+  Lesion severity가 높으면서 동시에 R̂이 낮고(≤1.05) ESS가 크면(≥200),
+  알고리즘이 <strong>높은 신뢰도로</strong> 병변을 잡았다고 해석할 수 있습니다.
+  반대로 severity가 높아도 R̂이 1.1 이상이면 MCMC가 충분히 수렴하지 않았으므로
+  결과를 보수적으로 해석해야 합니다.
+</div>
+
+<!-- ───────────── 6 ───────────── -->
+<h2 class="sec" id="s6"><span class="num">06</span>시간축 스크러버 사용법</h2>
+
+<p>KPI 스트립 바로 아래의 시간 슬라이더는 <strong>wavefield snapshot</strong>과
+<strong>seismogram gather</strong>의 노란 가로선을 동시에 제어합니다.</p>
+
+<h3>구성</h3>
+<ul>
+  <li><strong>▶ play / ❚❚ pause</strong> — 자동 진행 토글</li>
+  <li><strong>슬라이더</strong> — 9개 시간 단계 (0–67500 step)</li>
+  <li><strong>step / μs 표시</strong> — 현재 단계와 마이크로초 환산값</li>
+  <li><strong>0.5× / 1× / 2× / 4×</strong> — 자동 진행 속도</li>
+</ul>
+
+<h3>이렇게 쓰면 좋습니다</h3>
+<div class="step"><div class="num">1</div><div class="body">
+  <strong>play</strong> 클릭 → 파동 전파 양상을 동영상처럼 관찰
+</div></div>
+<div class="step"><div class="num">2</div><div class="body">
+  특정 시점이 흥미로우면 슬라이더를 직접 드래그하여 고정
+</div></div>
+<div class="step"><div class="num">3</div><div class="body">
+  seismogram gather의 가로 노란선이 wavefield와 동기 이동 — 어떤 시각의 신호가 어떤 수신기에 도달하는지 직관적으로 매핑
+</div></div>
+
+<!-- ───────────── 7 ───────────── -->
+<h2 class="sec" id="s7"><span class="num">07</span>6개 분석 패널 사용법</h2>
+
+<h3>7.1 Wavefield snapshot</h3>
+<p>3D 표면 그래프로 표시된 파동장 한 컷. 진폭이 곧 z축 고도이며, 색상은 SEISMIC 컬러맵 (음=파랑, 양=빨강).</p>
+<ul>
+  <li><strong>마우스 드래그</strong>: 회전 · <strong>스크롤</strong>: 줌 · <strong>Shift+드래그</strong>: 팬</li>
+  <li><strong>tissue 토글</strong>: 치아(불투명) · 골(반투명 적색) · 치은(연분홍) mesh 오버레이 ON/OFF</li>
+  <li><strong>카메라 프리셋</strong>: 8장 참조</li>
+  <li>시간 스크러버로 다음 step으로 이동</li>
+</ul>
+
+<h3>7.2 Seismogram gather</h3>
+<p>가로축이 수신기 번호 (0–99), 세로축이 시간 (μs), 색이 정규화된 진폭. <strong>노란 가로선</strong>이 현재 시간을 표시.</p>
+<ul>
+  <li>대각선 패턴은 파면이 수신기 배열을 따라 전파되는 모습</li>
+  <li>특정 수신기 컬럼에 비대칭적인 강한 신호가 나타나면 그 부근에 산란체가 존재할 가능성</li>
+</ul>
+
+<h3>7.3 GT vs Estimate · 3D overlay</h3>
+<p>참값(GT)과 posterior 추정의 시각적 비교. 3D 씬에는:</p>
+<ul>
+  <li><strong>녹색 +</strong> — Ground truth (참 병변 중심)</li>
+  <li><strong>자홍 ◆</strong> — Posterior mean (사후 평균 추정)</li>
+  <li><strong>시안 mesh</strong> — 95% credible region (mean ± 1.96σ ellipsoid)</li>
+  <li><strong>노란 선</strong> — error vector (GT → 추정)</li>
+</ul>
+<p>아래 strip에 GT / 추정 / Δx · Δy · Δz / σ / |err| 정량값이 표시됩니다.</p>
+
+<h3>7.4 Energy profile</h3>
+<p>수신기별 누적 에너지를 1D 곡선으로 표시. 노란 점이 peak 수신기. 가로 드래그로 영역을 선택하면 해당 수신기들이 다른 패널에서 highlight (예: velocity slice).</p>
+
+<h3>7.5 A/B wipe · GT ↔ posterior</h3>
+<p>병변 삽입 전/후 조직 분류 맵을 좌우 와이프로 비교.</p>
+<ul>
+  <li><strong>슬라이더 드래그</strong> — wipe 위치를 0–100% 사이로 조절</li>
+  <li><strong>GT only</strong> 버튼 — 좌측 (염증 비포함) 풀스크린</li>
+  <li><strong>Posterior</strong> 버튼 — 우측 (염증 자홍색 노출) 풀스크린</li>
+  <li>차이 영역이 자홍색으로 나타나는 곳이 모델이 가정한 병변 위치</li>
+</ul>
+
+<h3>7.6 Screening surface</h3>
+<p>모든 시간 step의 에너지를 누적한 평면 heatmap. 97.5 percentile 이상 voxel을 hotspot로 분류, 헤더에 voxel 수 표시.</p>
+
+<h3>7.7 MCMC inversion (큰 패널)</h3>
+<p>아래쪽 풀폭 패널. 좌측 3D scatter + 우측 misfit 곡선.</p>
+
+<h4>좌측 3D scatter — 표시되는 것</h4>
+<ul>
+  <li>치아·골·치은 mesh (배경, 매우 옅음)</li>
+  <li><strong>분포 클라우드</strong> — 방문 횟수가 많을수록 크고 진한 색</li>
+  <li><strong>mode</strong> (시안 ⭕) — 최빈값</li>
+  <li><strong>MAP</strong> (녹색 ◇) — 최소 misfit 모델</li>
+  <li><strong>GT</strong> (빨간 ✚) — 참값</li>
+  <li><strong>walk</strong> (노란 line) — iteration 순서대로 연결한 체인 경로</li>
+</ul>
+
+<h4>컨트롤</h4>
+<ul>
+  <li><strong>Play / Pause</strong> + 1×–10× 배속 + scrub 슬라이더</li>
+  <li>각 마커는 개별 토글 가능 (mode / best / walk)</li>
+  <li>우측 misfit 곡선: log scale, 최소값에 녹색 점</li>
+  <li>완료 시 정량 지표 표 (각 파라미터의 true / mode / best와 거리)</li>
+  <li><strong>accept</strong> 비율 표시 (20–60%가 건강한 Metropolis 체인)</li>
+</ul>
+
+<!-- ───────────── 8 ───────────── -->
+<h2 class="sec" id="s8"><span class="num">08</span>카메라 프리셋</h2>
+
+<p>3D 패널 헤더의 작은 토글로 표준 치과 시야로 즉시 전환할 수 있습니다.</p>
+
+<table>
+  <thead><tr><th>버튼</th><th>각도</th><th>임상적 의미</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">3⁄4</td><td>비스듬한 회전 뷰</td><td>기본 — 전체 구조 조망</td></tr>
+    <tr><td class="mono">Occlusal</td><td>위에서 아래 내려다보기</td><td>교합면 (bite view) — 치아 배열을 위에서</td></tr>
+    <tr><td class="mono">Buccal</td><td>볼 쪽에서 측면</td><td>외측 시야 — 협면 노출</td></tr>
+    <tr><td class="mono">Lingual</td><td>혀 쪽에서 측면</td><td>내측 시야 — 설면 노출</td></tr>
+  </tbody>
+</table>
+
+<p>적용 패널: Wavefield snapshot, GT vs Estimate, MCMC inversion (3D 씬 모두).</p>
+
+<!-- ───────────── 9 ───────────── -->
+<h2 class="sec" id="s9"><span class="num">09</span>케이스 비교 모드</h2>
+
+<p>좌측 사이드바의 <strong>케이스 비교</strong> 또는 좌측 네비게이션의 <strong>Compare</strong>를 통해 진입합니다.</p>
+
+<h3>구성</h3>
+<ul>
+  <li>상단: 좌(<strong>A</strong>) 와 우(<strong>B</strong>) 케이스 선택 드롭다운</li>
+  <li>상단 우측: 비교할 패널 종류 선택 (Seismogram / Screening / Energy / Velocity / Snapshot)</li>
+  <li>본문: 선택된 케이스 2개의 같은 패널을 나란히 표시</li>
+</ul>
+
+<h3>활용 예</h3>
+<ul>
+  <li><strong>같은 환자의 시간 경과 비교</strong>: 같은 환자 스캔이 여러 건이면 변화 추적</li>
+  <li><strong>다른 시나리오 비교</strong>: baseline ↔ position shift ↔ size change 의 wave signature 차이 확인</li>
+</ul>
+
+<!-- ───────────── 10 ───────────── -->
+<h2 class="sec" id="s10"><span class="num">10</span>파이프라인 스토리 모드</h2>
+
+<p>분석 알고리즘의 6단계를 단계별 카드로 보여주는 walkthrough 화면입니다.</p>
+
+<ol>
+  <li><strong>CBCT + STL 정합</strong> — 그레이스케일 단면 + 정합 crosshair</li>
+  <li><strong>치아·조직 분할 (4-class)</strong> — bg → 치은 → 골 → 치아 순차 노출</li>
+  <li><strong>병변 삽입</strong> — 풀 라벨 + 펄싱 lesion 마커</li>
+  <li><strong>탄성파 전파 시뮬레이션</strong> — wavefield + seismogram 동시</li>
+  <li><strong>저속 성분 + 후보 영역</strong> — screening + energy</li>
+  <li><strong>국소 역산 (MCMC)</strong> — 풀 inversion pane</li>
+</ol>
+
+<h3>사용법</h3>
+<ul>
+  <li>상단 step 레일에서 단계를 직접 클릭하거나 ← → 버튼으로 이동</li>
+  <li><strong>자동재생</strong> 버튼 → 6초마다 다음 단계로</li>
+  <li>중앙에 단계별 hero 설명 + 시각화</li>
+  <li>이 모드는 환자에게 시뮬레이션 흐름을 설명할 때 유용</li>
+</ul>
+
+<!-- ───────────── 11 ───────────── -->
+<h2 class="sec" id="s11"><span class="num">11</span>재계산 기능</h2>
+
+<p>오른쪽 사이드바 상단의 <strong>↻ 재계산</strong> 버튼으로 진입합니다 (doctor 계정만).</p>
+
+<h3>① Config 모드 (파라미터 설정)</h3>
+<table>
+  <thead><tr><th>파라미터</th><th>의미</th><th>범위 / 기본값</th></tr></thead>
+  <tbody>
+    <tr><td><strong>MCMC 반복 수</strong></td><td>역산 체인 길이</td><td>200–3000, 기본 1000</td></tr>
+    <tr><td><strong>시뮬레이션 시간 샘플</strong></td><td>파동 적분 길이</td><td>25k / 50k / 75k 중 선택</td></tr>
+    <tr><td><strong>중심 주파수</strong></td><td>Ricker pulse 주파수</td><td>25 / 30 / 35 / 40 kHz</td></tr>
+    <tr><td><strong>병변 반경 보정</strong></td><td>가정 lesion 크기 ± nudge</td><td>−3 ~ +3 voxel</td></tr>
+  </tbody>
+</table>
+<p>슬라이더 변경 시 하단의 <strong>예상 실행 시간</strong> 카드가 즉시 갱신됩니다.</p>
+
+<h3>② Running 모드 (실시간 진행)</h3>
+<ul>
+  <li>좌측: 6단계 카드 (현재 단계 강조, 완료 단계 ✓)</li>
+  <li>우측: 단계별 live preview (단계마다 자동 전환)
+    <ul>
+      <li>1–3단계: CBCT 정합 / 분할 / 병변 삽입 미리보기</li>
+      <li>4단계: wavefield autoplay</li>
+      <li>5단계: screening surface</li>
+      <li>6단계: 4종 마커(walk · mode · MAP · GT) 모두 ON된 live MCMC</li>
+    </ul>
+  </li>
+  <li>하단: 전체 진행률 bar + 잔여 시간</li>
+</ul>
+
+<h3>③ Done 모드</h3>
+<p>모든 단계 ✓ 표시 후 <strong>결과 보기 →</strong> CTA. 클릭 시 워크스페이스로 돌아가 결과가 새로 fetch됩니다.</p>
+
+<!-- ───────────── 12 ───────────── -->
+<h2 class="sec" id="s12"><span class="num">12</span>보고서 PDF 다운로드</h2>
+
+<p>좌측 사이드바의 <strong>보고서 PDF</strong> 버튼을 클릭하면 즉시 다운로드됩니다.</p>
+
+<h3>구성</h3>
+<ul>
+  <li>상단 타이틀 바 + report ID + 일자</li>
+  <li><strong>01 EXECUTIVE SUMMARY</strong> — 색상 severity gauge bar + 카테고리 (NEGATIVE / EQUIVOCAL / SUSPICIOUS / PROBABLE LESION) + 임상 요약</li>
+  <li><strong>02 EXAMINATION</strong> — 환자/스캔/음향 파라미터</li>
+  <li><strong>03 DETECTION FINDINGS</strong> — 정량 탐지 결과</li>
+  <li><strong>04 BAYESIAN INVERSION</strong> — 수렴 진단 + GT/mode/MAP 비교 표 + 자동 해석 노트</li>
+  <li><strong>05 ASSESSMENT &amp; PLAN</strong> — 임상 액션 + rationale</li>
+  <li>하단 면책 + 페이지 번호</li>
+</ul>
+
+<p>A4 1페이지, 영어 임상 양식. 파일명: <code>WAV-NNNNN-YYYY.pdf</code></p>
+
+<!-- ───────────── 13 ───────────── -->
+<h2 class="sec" id="s13"><span class="num">13</span>의사 코멘트</h2>
+
+<p>오른쪽 사이드바 하단의 <strong>+ 의사 코멘트 작성</strong> 영역에서 진단 소견을 작성할 수 있습니다 (doctor 계정).</p>
+
+<ol>
+  <li>박스 클릭 → 텍스트 입력 영역 펼침</li>
+  <li>진단 소견, 권장 후속 조치 등을 자유 형식으로 입력</li>
+  <li><strong>저장</strong> 버튼 클릭 → 저장 후 다음 접속 시에도 유지</li>
+  <li>저장된 코멘트는 보고서 PDF에는 포함되지 <em>않습니다</em> (개인정보 보호)</li>
+  <li><strong>수정</strong> 버튼으로 언제든 재편집 가능</li>
+</ol>
+
+<!-- ───────────── 14 ───────────── -->
+<h2 class="sec" id="s14"><span class="num">14</span>용어 사전</h2>
+
+<dl class="glossary">
+  <dt>30 kHz Ricker pulse</dt>
+  <dd>본 시스템에서 source로 사용하는 음향 파동 형태. 중심 주파수 30 kHz의 짧은 wavelet으로, 임상용 초음파(보통 1–20 MHz)보다 훨씬 낮은 주파수입니다.</dd>
+
+  <dt>Vs (전단파 속도)</dt>
+  <dd>매질 내 전단파 속도. 조직별로 값이 달라 본 시스템에서는 치아(2.5), 골(1.5), 치은(0.05) 등의 값으로 모델링됩니다. 염증 조직은 약 50% 더 느린 값(0.025)으로 가정.</dd>
+
+  <dt>MPML</dt>
+  <dd>Multi-axial Perfectly Matched Layer. 유한 영역 시뮬레이션에서 경계로부터의 반사를 흡수하기 위한 경계 조건.</dd>
+
+  <dt>MCMC</dt>
+  <dd>Markov Chain Monte Carlo. Bayesian 사후분포에서 표본을 추출하는 알고리즘. 본 시스템은 Metropolis-Hastings 1000-iter 체인을 사용합니다.</dd>
+
+  <dt>R̂ (R-hat)</dt>
+  <dd>MCMC 수렴 진단량. 1에 가까울수록 수렴이 잘 된 것이며, 1.05 이하면 수렴, 1.10 초과면 미수렴으로 해석합니다.</dd>
+
+  <dt>ESS (Effective Sample Size)</dt>
+  <dd>유효 표본 크기. 자기상관을 보정한 후 실질적으로 독립인 표본의 수. 본 시스템에서는 고유 posterior state 수로 근사합니다.</dd>
+
+  <dt>posterior mode</dt>
+  <dd>사후분포에서 가장 자주 방문된 상태 (최빈값).</dd>
+
+  <dt>MAP (Maximum A Posteriori)</dt>
+  <dd>본 시스템에서는 최소 misfit을 달성한 iteration의 상태로 정의.</dd>
+
+  <dt>misfit</dt>
+  <dd>관측된 데이터와 모델 예측값 사이의 잔차. 작을수록 모델이 데이터를 잘 설명합니다.</dd>
+
+  <dt>acceptance rate</dt>
+  <dd>Metropolis-Hastings 체인에서 제안된 다음 상태가 수락된 비율. 20–60%가 건강한 범위입니다.</dd>
+
+  <dt>credible region (신뢰 영역)</dt>
+  <dd>사후분포의 일정 비율(예: 95%)이 포함되는 영역. 빈도주의의 confidence interval과 해석이 다릅니다.</dd>
+
+  <dt>voxel</dt>
+  <dd>3D pixel. 본 시스템의 모델은 415 × 308 × 17 voxel 격자이며, 1 voxel ≈ 0.1 mm (근사).</dd>
+
+  <dt>seismogram</dt>
+  <dd>수신기에 기록된 시계열 신호. 본 시스템에서는 75,000 timestep × 100 receiver 행렬.</dd>
+
+  <dt>FDI 표기법</dt>
+  <dd>ISO 3950 치아 표기 시스템. 첫 자리는 사분면(1=상우, 2=상좌, 3=하좌, 4=하우), 둘째 자리는 중앙선부터의 거리(1–8). 예: 36 = 좌하 첫째 큰어금니.</dd>
+</dl>
+
+<!-- ───────────── 15 ───────────── -->
+<h2 class="sec" id="s15"><span class="num">15</span>한계와 면책 사항</h2>
+
+<div class="callout bad">
+  <span class="label">반드시 확인</span>
+  본 시스템은 PoC 단계의 시뮬레이션 데모이며, 실제 임상 진단 기기로 인증되지 않았습니다.
+</div>
+
+<h3>데이터의 한계</h3>
+<ul>
+  <li>모든 환자 정보, 스캔, 병변은 <strong>합성된 가상 케이스</strong>입니다</li>
+  <li>탄성파 시뮬레이션은 사전 계산된 결과이며, 새로운 환자 데이터에 대한 실시간 분석은 지원하지 않습니다</li>
+  <li>치아·치은·골의 음향 물성치는 문헌값을 사용한 가정이며, 환자별 변동을 반영하지 않습니다</li>
+</ul>
+
+<h3>알고리즘의 한계</h3>
+<ul>
+  <li>Severity 점수는 잔차의 단일 스칼라이며, 병변의 형태·크기·심도에 대한 정보를 모두 담지 못합니다</li>
+  <li>MCMC 추정의 신뢰도는 R̂ / ESS로 정량화되나, 그 자체가 임상 정확도를 보장하지는 않습니다</li>
+  <li>현재 시스템은 단일 시점의 횡단면 분석만 다루며, 시간 추적은 케이스 비교를 통한 정성적 확인 수준입니다</li>
+</ul>
+
+<h3>임상 의사결정 시 유의 사항</h3>
+<ul>
+  <li>본 시스템의 출력값을 <strong>단일 근거</strong>로 진료 결정을 내려서는 안 됩니다</li>
+  <li>치주낭 깊이, 부착 소실, 출혈 여부 등 기존 임상 검진과 <strong>병행 검토</strong>가 필요합니다</li>
+  <li>의심 소견이 있을 경우 추가 영상(CBCT 등) 및 생화학적 검사를 통한 확인이 권장됩니다</li>
+</ul>
+
+<h3>향후 계획</h3>
+<ul>
+  <li>실제 CBCT + STL 환자 데이터와 DentalSegmentator 분할 결과의 통합</li>
+  <li>In vitro 모델을 이용한 forward 모델 검증</li>
+  <li>Ex vivo 조직에서의 실측 비교</li>
+  <li>다기관 임상 데이터를 이용한 알고리즘 보정</li>
+</ul>
+
+<div class="footer">
+  Dental Wave Viz · 임상의용 사용 설명서 · 시뮬레이션 PoC<br />
+  본 문서의 내용은 학술 데모 목적이며 임상 진료의 표준이 아닙니다.
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# Env / secrets
+.env
+.env.local
+.env.production.local
+backend/.env
+.flyctl/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Logs
+*.log
+
+# DB live data — keep schema in code; don't ship a populated copy
+# (Comment out if you want to ship the seeded demo DB)
+# backend/dental.sqlite
+
+# Build artifacts
+frontend/dist/
+backend/static/
+
+# Design reference (kept locally; not part of source tree)
+의료 도메인.zip
+_design_unpack/
+
+# Misc
+*.tsbuildinfo
+.tmp/

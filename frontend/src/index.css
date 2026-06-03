@@ -1,0 +1,347 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Dental Wave Viz — clinical identity (v2, Claude Design handoff)
+   Dual mode:
+     • Clinical Light (default — admin/triage/story/wizard/lab)
+       Warm porcelain · enamel ivory · jade-teal accent · rose findings.
+     • Clinical Dark  (imaging viewport — scans/:id / compare / patient mobile-night)
+   Theme switching: [data-theme="dark"|"light"] on <html>, route-driven (see useRouteTheme.ts).
+   Type: Inter + Noto Sans KR (UI) · JetBrains Mono (data) · Newsreader (editorial)
+   ============================================================ */
+
+@theme {
+  /* surfaces — Clinical Dark defaults (imaging surface) */
+  --color-bg:        #0B0F14;
+  --color-panel:     #121821;
+  --color-panel-2:   #1A2230;
+  --color-elevated:  #232C3B;
+  --color-line:      #28323F;
+  --color-line-soft: rgba(255,255,255,0.05);
+  --color-divider:   rgba(255,255,255,0.06);
+
+  --color-accent:        #58C2F0;
+  --color-accent-strong: #7BD0F5;
+  --color-accent-soft:   #0F2C3F;
+  --color-accent-line:   #1F4A66;
+
+  --color-good: #3CD49A;
+  --color-warn: #F2B441;
+  --color-bad:  #FF5D5D;
+  --color-info: #58C2F0;
+  --color-signal: #F2B441;
+
+  /* finding overlays — distinct from chrome accents (used in viewer overlays) */
+  --color-finding-progressed: #FF3E8A;
+  --color-finding-incipient:  #FFB3D1;
+  --color-crosshair:          #FFD23F;
+  --color-roi:                #A78BFA;
+
+  --color-text:        #E6EDF5;
+  --color-text-strong: #F4F8FF;
+  --color-muted:       #8A9BB0;
+  --color-faint:       #5A6878;
+
+  /* tissue (Vs model) — theme-independent */
+  --color-tissue-bg:           #1A2230;
+  --color-tissue-gingiva:      #FFB3D1;
+  --color-tissue-bone:         #F2B441;
+  --color-tissue-tooth:        #F5EFE2;
+  --color-tissue-inflammation: #FF3E8A;
+
+  /* dot grid texture */
+  --dot-color: rgba(120,160,200,0.05);
+
+  /* shadows — research-bench (dark default; light overrides below) */
+  --shadow-panel: 0 1px 2px rgba(0,0,0,0.30), 0 6px 20px rgba(0,0,0,0.18);
+  --shadow-pop:   0 8px 28px rgba(0,0,0,0.45);
+
+  --font-sans:       'Inter', 'Noto Sans KR', -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:       'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+  --font-editorial:  'Newsreader', 'Noto Serif KR', Georgia, serif;
+
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+
+  --animate-fade-in: fade-in 0.16s var(--ease-out) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-rise:    rise 0.28s var(--ease-out) both;
+}
+
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes shimmer { 0% { background-position: -240px 0 } 100% { background-position: calc(240px + 100%) 0 } }
+@keyframes rise    { from { transform: translateY(6px) } to { transform: translateY(0) } }
+
+html, body, #root { height: 100%; margin: 0; }
+
+/* ===== Clinical Light (default surface — warm porcelain) ===== */
+:root[data-theme="light"] {
+  --color-bg:        #EFE9DF;   /* porcelain warm */
+  --color-panel:     #FCFAF5;   /* enamel ivory */
+  --color-panel-2:   #F2ECE1;   /* light cream */
+  --color-elevated:  #FFFFFF;   /* pop card */
+  --color-line:      #E3DBCB;
+  --color-line-soft: rgba(70,52,28,0.07);
+  --color-divider:   rgba(70,52,28,0.09);
+
+  --color-accent:        #0E8E86;   /* jade teal */
+  --color-accent-strong: #0A6F68;
+  --color-accent-soft:   #DCEEEB;
+  --color-accent-line:   #A6D7D1;
+
+  --color-good: #1E9A66;
+  --color-warn: #C9791A;
+  --color-bad:  #D6483E;
+  --color-info: #0E8E86;
+  --color-signal: #C9791A;
+
+  --color-finding-progressed: #DC3A77;   /* rose finding */
+  --color-finding-incipient:  #EEA6C1;
+  --color-crosshair:          #B07C00;
+  --color-roi:                #7C5BD4;
+
+  --color-text:        #2B333A;
+  --color-text-strong: #161E24;
+  --color-muted:       #626C73;
+  --color-faint:       #9AA0A2;
+
+  --dot-color: rgba(40,70,72,0.05);
+
+  /* warm shadows (per design handoff §6) */
+  --shadow-panel: 0 1px 2px rgba(60,45,25,0.04), 0 6px 20px rgba(60,45,25,0.05);
+  --shadow-pop:   0 8px 28px rgba(60,45,25,0.10);
+}
+
+body {
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--dot-color) 1px, transparent 0);
+  background-size: 24px 24px;
+  background-position: 0 0;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  font-feature-settings: "cv11", "ss01", "tnum", "calt";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.005em;
+}
+
+button, input, select, textarea { font-family: inherit; font-size: inherit; }
+button {
+  cursor: pointer;
+  transition: border-color 160ms var(--ease-out),
+              background-color 160ms var(--ease-out),
+              color 160ms var(--ease-out),
+              opacity 160ms var(--ease-out),
+              transform 120ms var(--ease-out);
+}
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,
+a:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+a { transition: color 160ms var(--ease-out); }
+
+/* ---- tabular numerals for data ---- */
+.num, .font-mono, .dt .num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.unit { font-size: 0.75em; opacity: 0.6; margin-left: 2px; }
+
+/* ---- editorial display (Newsreader serif italic for hero numerals/headlines) ---- */
+.editorial   { font-family: var(--font-editorial); font-weight: 400; letter-spacing: -0.01em; }
+.editorial-i { font-family: var(--font-editorial); font-style: italic; letter-spacing: -0.01em; }
+
+/* ---- surfaces ---- */
+.surface {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+}
+.surface-elev {
+  background: var(--color-elevated);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-panel);
+}
+.surface-flat {
+  background: var(--color-panel-2);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+}
+
+/* ---- tab bar ---- */
+.tabbar {
+  display: flex; align-items: stretch;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-panel);
+  font-size: 11.5px;
+}
+.tabbar > button {
+  padding: 7px 12px;
+  color: var(--color-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+.tabbar > button:hover { color: var(--color-text); }
+.tabbar > button.active {
+  color: var(--color-text-strong);
+  border-bottom-color: var(--color-accent);
+}
+
+/* ---- dense table ---- */
+.dt {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+.dt thead th {
+  position: sticky; top: 0;
+  background: var(--color-panel);
+  border-bottom: 1px solid var(--color-line);
+  text-align: left;
+  font-weight: 500;
+  color: var(--color-muted);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 9px 14px;
+  white-space: nowrap;
+}
+.dt tbody tr {
+  border-bottom: 1px solid var(--color-line-soft);
+  cursor: pointer;
+  transition: background 120ms var(--ease-out);
+}
+.dt tbody tr:hover { background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
+.dt tbody td { padding: 9px 14px; vertical-align: middle; }
+
+/* ---- pills ---- */
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px; font-weight: 500;
+  border: 1px solid;
+  white-space: nowrap;
+  line-height: 1.5;
+  font-feature-settings: "tnum";
+}
+.pill-good { color: var(--color-good); border-color: color-mix(in srgb, var(--color-good) 28%, transparent); background: color-mix(in srgb, var(--color-good) 8%, transparent); }
+.pill-warn { color: var(--color-warn); border-color: color-mix(in srgb, var(--color-warn) 28%, transparent); background: color-mix(in srgb, var(--color-warn) 8%, transparent); }
+.pill-bad  { color: var(--color-bad);  border-color: color-mix(in srgb, var(--color-bad) 28%, transparent);  background: color-mix(in srgb, var(--color-bad) 8%, transparent); }
+.pill-info { color: var(--color-info); border-color: color-mix(in srgb, var(--color-info) 28%, transparent); background: color-mix(in srgb, var(--color-info) 8%, transparent); }
+.pill-accent { color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 32%, transparent); background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.pill-finding { color: var(--color-finding-progressed); border-color: color-mix(in srgb, var(--color-finding-progressed) 32%, transparent); background: color-mix(in srgb, var(--color-finding-progressed) 8%, transparent); }
+.pill-muted { color: var(--color-muted); border-color: var(--color-line); background: transparent; }
+
+.status-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+/* ---- kbd ---- */
+kbd, .kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  border: 1px solid var(--color-line);
+  border-bottom-width: 2px;
+  background: var(--color-panel-2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+/* ---- buttons ---- */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-2);
+  color: var(--color-text);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.btn:hover { border-color: var(--color-accent-line); background: var(--color-elevated); }
+.btn:active { transform: translateY(0.5px); }
+.btn-primary {
+  background: var(--color-accent);
+  color: #FFFFFF;
+  border-color: var(--color-accent);
+  font-weight: 600;
+}
+.btn-primary:hover { background: var(--color-accent-strong); border-color: var(--color-accent-strong); }
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-muted);
+}
+.btn-ghost:hover { color: var(--color-text); background: var(--color-panel-2); }
+.btn-danger {
+  background: var(--color-bad);
+  color: #FFFFFF;
+  border-color: var(--color-bad);
+}
+
+/* dark theme: primary button needs darker text on cyan */
+:root:not([data-theme="light"]) .btn-primary { color: #0a1414; }
+
+/* ---- skeleton ---- */
+.skeleton {
+  background: linear-gradient(90deg, var(--color-panel) 0%, var(--color-panel-2) 40%, var(--color-panel) 80%);
+  background-size: 600px 100%;
+  animation: var(--animate-shimmer);
+  border-radius: 4px;
+}
+
+/* ---- chip (compact tag) ---- */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px;
+  border-radius: 9px;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel);
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.chip-active {
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent-line);
+  background: var(--color-accent-soft);
+}
+
+/* ---- card (warm panel with subtle warm shadow) ---- */
+.card {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-panel);
+}
+
+/* ---- scrollbar ---- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+:root[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(40,30,15,0.10); border-radius: 4px; }
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(40,30,15,0.18); }
+:root:not([data-theme="light"]) ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+:root:not([data-theme="light"]) ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- reduced motion (a11y) ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,44 @@
+# Fly.io app config — single container serving FastAPI + the built React app.
+#
+# First-time deploy:
+#   1. flyctl launch --no-deploy --copy-config --name dental-wave-viz
+#   2. flyctl secrets set DENTAL_JWT_SECRET="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+#   3. flyctl volumes create dental_data --region nrt --size 1   # for SQLite + bundles
+#   4. flyctl deploy
+
+app = "dental-wave-viz-willy"
+primary_region = "nrt"   # Tokyo — adjust to taste
+
+[build]
+
+[env]
+  DENTAL_ENVIRONMENT = "production"
+  # CORS not needed when FE + BE share the origin; left here for cross-origin fallbacks.
+  DENTAL_CORS_ORIGINS = "[]"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  # Keep 1 machine warm so first request after idle returns in ~700ms instead
+  # of the 6s cold-start observed previously. The shared-1cpu 512MB tier is
+  # cheap enough at 1 always-on to justify the UX win.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 50
+    soft_limit = 30
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  # 1 GB so the seismogram gather (~30 MB .dat → numpy + JSON downsample) has
+  # headroom. Previous 512 MB OOM'd handling case=2 gathers.
+  memory_mb = 1024
+
+# Persistent volume — keeps dental.sqlite and the binary bundles across deploys.
+[mounts]
+  source = "dental_data"
+  destination = "/app/backend/persist"

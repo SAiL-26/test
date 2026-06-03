@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>Dental Wave Viz — 시스템 파이프라인</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Noto+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy:        #0F1B3D;
+    --navy-deep:   #0A1530;
+    --navy-card:   #1F2C5C;
+    --accent:      #0B7BC4;
+    --text:        #0F1B2D;
+    --muted:       #4C6272;
+    --faint:       #8590A0;
+    --line:        #D8DDE2;
+    --soft:        #F6F8FA;
+    --soft-blue:   #EEF3F9;
+    --good:        #0E8A5F;
+    --warn:        #C9761A;
+    --bad:         #C8322B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: #2A2A33;
+    color: var(--text);
+    font-family: 'Inter', 'Noto Sans KR', -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .slide {
+    width: 1280px;
+    height: 720px;
+    background: #fff;
+    margin: 32px auto;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.32);
+    display: grid;
+    grid-template-rows: 38px 1fr 24px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ───── header bar ───── */
+  .topbar {
+    background: var(--navy);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+  .topbar .left { font-weight: 500; opacity: 0.95; }
+  .topbar .right { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; opacity: 0.7; }
+
+  /* ───── body ───── */
+  .body {
+    padding: 36px 56px 28px;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 14px;
+  }
+
+  /* title */
+  .title h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    color: var(--text);
+    position: relative;
+    display: inline-block;
+  }
+  .title h1::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -6px;
+    width: 56px; height: 3px;
+    background: var(--navy);
+    border-radius: 2px;
+  }
+  .title .sub {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  /* ───── 5-step grid ───── */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+  .step-top {
+    background: var(--navy);
+    color: #fff;
+    padding: 16px 14px 14px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 92px;
+  }
+  .step-top .head {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .step-top .head .circle {
+    width: 16px; height: 16px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .step-top .name {
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
+  }
+  .step-top .sub {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.45;
+  }
+
+  /* detail card under each step */
+  .detail {
+    background: var(--soft-blue);
+    border: 1px solid #D5E0EC;
+    border-radius: 5px;
+    padding: 12px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 10.5px;
+    line-height: 1.55;
+  }
+  .detail .label {
+    text-align: center;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .detail .kv {
+    color: var(--muted);
+    font-size: 9.5px;
+    line-height: 1.55;
+  }
+  .detail .kv strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .detail .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--text);
+  }
+  .detail ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .detail ul li {
+    padding: 2px 0;
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .detail ul li strong { color: var(--text); font-weight: 500; }
+
+  /* ───── dev stack ───── */
+  .stack-section {
+    margin-top: 4px;
+  }
+  .stack-section .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .stack-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 11px;
+  }
+  .stack-cell {
+    border: 1.5px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .stack-cell .head {
+    background: var(--navy);
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .stack-cell .body-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 11px 6px;
+    background: #fff;
+  }
+  .stack-cell .logo {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--soft-blue);
+    flex-shrink: 0;
+  }
+  .stack-cell .logo svg { width: 17px; height: 17px; }
+  .stack-cell .name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .stack-cell .name .small { font-size: 9.5px; color: var(--muted); font-weight: 400; margin-left: 2px; }
+
+  /* ───── footer ───── */
+  .footer {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--faint);
+    background: #fff;
+  }
+  .footer .right { margin-left: auto; }
+
+  /* print */
+  @media print {
+    @page { size: 1280px 720px; margin: 0; }
+    html, body { background: #fff; }
+    .slide { margin: 0; box-shadow: none; }
+  }
+
+  /* viewer chrome — only visible in browser */
+  .viewer-tip {
+    max-width: 1280px;
+    margin: 0 auto 16px;
+    padding: 12px 24px;
+    color: #d0d0d8;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+  }
+  .viewer-tip strong { color: #fff; }
+  @media print { .viewer-tip { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="viewer-tip">
+  <strong>이 페이지로 슬라이드 만들기:</strong>
+  &nbsp;Ctrl/⌘ + P → "PDF로 저장" (용지: 사용자 지정 1280×720, 여백 0)
+  · 또는 화면 스크린샷 (1280×720 영역) 캡처
+</div>
+
+<div class="slide">
+
+  <!-- ───── top bar ───── -->
+  <div class="topbar">
+    <span class="left">[2026-1 Data Visualization for Medical Applications] DENTAL WAVE VIZ</span>
+    <span class="right">github.com/dental-wave-viz</span>
+  </div>
+
+  <!-- ───── body ───── -->
+  <div class="body">
+
+    <!-- title -->
+    <div class="title">
+      <h1>시스템 파이프라인</h1>
+      <div class="sub">
+        30&nbsp;kHz 탄성파 forward 시뮬레이션 + Bayesian MCMC 역산으로 치은 병변 후보 영역을 추정하고 임상 의사결정을 지원하는 시각화 시스템
+      </div>
+    </div>
+
+    <!-- 5 steps -->
+    <div class="steps">
+
+      <!-- step 1 -->
+      <div class="step-top">
+        <div class="head"><span class="circle">①</span> Data Registration</div>
+        <div class="name">데이터 정합</div>
+        <div class="sub">CBCT volume + oral-scan STL → unified voxel grid</div>
+      </div>
+
+      <!-- step 2 -->
+      <div class="step-top">
+        <div class="head"><span class="circle">②</span> Tissue Segmentation</div>
+        <div class="name">조직 분할</div>
+        <div class="sub">DentalSegmentator · nnU-Net v2.2 inference</div>
+      </div>
+
+      <!-- step 3 -->
+      <div class="step-top">
+        <div class="head"><span class="circle">③</span> Wave Simulation</div>
+        <div class="name">병변 삽입 &amp; 파동 시뮬</div>
+        <div class="sub">3D MPML elastic FD · 30 kHz Ricker pulse</div>
+      </div>
+
+      <!-- step 4 -->
+      <div class="step-top">
+        <div class="head"><span class="circle">④</span> Bayesian Inversion</div>
+        <div class="name">국소 역산 (MCMC)</div>
+        <div class="sub">Metropolis-Hastings · 1000-iter posterior</div>
+      </div>
+
+      <!-- step 5 -->
+      <div class="step-top">
+        <div class="head"><span class="circle">⑤</span> Explanation &amp; Report</div>
+        <div class="name">시각화 &amp; 보고</div>
+        <div class="sub">Interactive panels · clinical PDF report</div>
+      </div>
+
+      <!-- detail row -->
+      <div class="detail">
+        <div class="label">Input Data</div>
+        <ul>
+          <li><strong>CBCT volume</strong> · grayscale density</li>
+          <li><strong>STL surface</strong> · 치아 외부 형상</li>
+          <li><strong>Voxel grid</strong> 415 × 308 × 17</li>
+          <li><strong>Spacing</strong> ~0.1 mm / voxel</li>
+        </ul>
+      </div>
+
+      <div class="detail">
+        <div class="label">4-Class Label Map</div>
+        <ul>
+          <li><strong>Background</strong> Vs = 0.01</li>
+          <li><strong>Gingiva</strong> Vs = 0.05</li>
+          <li><strong>Bone</strong> Vs = 1.5</li>
+          <li><strong>Tooth</strong> Vs = 2.5</li>
+        </ul>
+      </div>
+
+      <div class="detail">
+        <div class="label">Forward Model</div>
+        <ul>
+          <li><strong>Lesion</strong> 치은 → 염증 (0.025)</li>
+          <li><strong>Source</strong> 치아 표면 coupling</li>
+          <li><strong>NT</strong> 75,000 steps · dt 4 ns</li>
+          <li><strong>Receivers</strong> 100 · arch-conformal</li>
+        </ul>
+      </div>
+
+      <div class="detail">
+        <div class="label">Posterior Sample</div>
+        <ul>
+          <li><strong>Params</strong> (x, y, z, r) · voxel</li>
+          <li><strong>Diagnostics</strong> R̂, ESS, accept rate</li>
+          <li><strong>Estimators</strong> Mode · MAP · GT</li>
+          <li><strong>Output</strong> 95% credible region</li>
+        </ul>
+      </div>
+
+      <div class="detail">
+        <div class="label">Output Surfaces</div>
+        <ul>
+          <li><strong>KPI strip</strong> 5 metrics</li>
+          <li><strong>6 panels</strong> wavefield · MCMC · A/B</li>
+          <li><strong>3D overlay</strong> GT vs Estimate</li>
+          <li><strong>PDF report</strong> 임상 액션 + rationale</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- dev stack -->
+    <div class="stack-section">
+      <div class="label">Development Stack</div>
+      <div class="stack-row">
+
+        <div class="stack-cell">
+          <div class="head">Frontend</div>
+          <div class="body-row">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="2" fill="#0B7BC4" />
+                <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#0B7BC4" stroke-width="1.5" />
+                <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#0B7BC4" stroke-width="1.5" transform="rotate(60 12 12)" />
+                <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#0B7BC4" stroke-width="1.5" transform="rotate(120 12 12)" />
+              </svg>
+            </div>
+            <div class="name">React<span class="small">+TS</span></div>
+          </div>
+        </div>
+
+        <div class="stack-cell">
+          <div class="head">Backend</div>
+          <div class="body-row">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" fill="#0E8A5F" />
+                <path d="M11 6 L11 13 L7 13 L13 18 L13 11 L17 11 Z" fill="#fff" />
+              </svg>
+            </div>
+            <div class="name">FastAPI</div>
+          </div>
+        </div>
+
+        <div class="stack-cell">
+          <div class="head">Forward Model</div>
+          <div class="body-row">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" fill="#C9761A" />
+                <path d="M5 12 Q 7 8 9 12 T 13 12 T 17 12 T 21 12" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div class="name">MPML-FD</div>
+          </div>
+        </div>
+
+        <div class="stack-cell">
+          <div class="head">Inversion</div>
+          <div class="body-row">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" fill="#1F2C5C" />
+                <circle cx="9" cy="9" r="1.4" fill="#fff" />
+                <circle cx="13" cy="11" r="1.2" fill="#fff" />
+                <circle cx="10" cy="14" r="1.5" fill="#fff" />
+                <circle cx="15" cy="15" r="1.1" fill="#fff" />
+                <circle cx="14" cy="8" r="1" fill="#fff" />
+                <path d="M9 9 L13 11 L10 14 L15 15 L14 8" stroke="rgba(255,255,255,0.45)" stroke-width="0.8" fill="none" />
+              </svg>
+            </div>
+            <div class="name">MCMC</div>
+          </div>
+        </div>
+
+        <div class="stack-cell">
+          <div class="head">Visualization</div>
+          <div class="body-row">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" fill="#0B7BC4" />
+                <rect x="6" y="13" width="2.2" height="5" fill="#fff" />
+                <rect x="10" y="9" width="2.2" height="9" fill="#fff" />
+                <rect x="14" y="11" width="2.2" height="7" fill="#fff" />
+              </svg>
+            </div>
+            <div class="name">Plotly.js</div>
+          </div>
+        </div>
+
+        <div class="stack-cell">
+          <div class="head">Deployment</div>
+          <div class="body-row">
+            <div class="logo">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" fill="#7B5CFA" />
+                <path d="M7 16 L17 7 L13 11 L18 13 L15 14 L17 17 L13 16 L11 19 L10 15 L7 16 Z" fill="#fff" />
+              </svg>
+            </div>
+            <div class="name">Fly.io</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- footer -->
+  <div class="footer">
+    <span class="left">Dental Wave Viz · simulation-only PoC</span>
+    <span class="mid" style="margin-left: 16px; opacity: 0.7;">Co-developed with Claude (Anthropic)</span>
+    <span class="right">Page 01 / 01</span>
+  </div>
+
+</div>
+
+</body>
+</html>
