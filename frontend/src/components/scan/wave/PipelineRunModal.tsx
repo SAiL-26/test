@@ -156,16 +156,12 @@ export default function PipelineRunModal({ onClose, onComplete, caseId }: Props)
           </button>
         </header>
 
-        {/* CONFIG MODE — split into a scrolling content region + a sticky
-            action footer so the 실행 시작 button is ALWAYS visible. The
-            previous layout used mt-auto inside an overflow-auto container
-            which only pushed buttons to the end of the SCROLL content, not
-            the visible viewport — on shorter screens (720px tall laptops,
-            split-screen, 1440x900 with browser chrome) the action row sat
-            below the fold with no visible scroll affordance. */}
+        {/* CONFIG MODE — single scroll region with the action row as the
+            natural last element. Same pattern as the wizard: putting the
+            buttons inside the scroll guarantees they are reachable on
+            every monitor / DPI / extension combination. */}
         {mode === 'config' && (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
+          <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
             <div className="grid grid-cols-2 gap-5">
               <ParamCard
                 icon={<GitBranch size={14} className="text-accent" />}
@@ -274,27 +270,29 @@ export default function PipelineRunModal({ onClose, onComplete, caseId }: Props)
               </div>
             </div>
 
-            </div>
-            {/* Action row — outside the scrolling region so it is always
-                visible regardless of viewport height. */}
-            <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-line bg-panel-2/60 px-6 py-3">
+            {/* Action row — inline at the end of the scroll content.
+                Scrolls with the params + projected-runtime cards above. */}
+            <div className="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-line pt-5">
               <button
+                type="button"
                 onClick={() => setParams(DEFAULT_PARAMS)}
                 className="rounded-md border border-line bg-panel-2 px-3 py-1.5 text-xs text-muted hover:border-accent hover:text-text"
               >
                 기본값
               </button>
               <button
+                type="button"
                 onClick={onClose}
                 className="rounded-md border border-line bg-panel-2 px-3 py-1.5 text-xs text-text hover:border-accent"
               >
                 취소
               </button>
               <button
+                type="button"
                 onClick={() => setMode('running')}
-                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-1.5 text-xs font-semibold text-bg hover:bg-accent-strong"
+                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-5 py-2 text-[13px] font-semibold text-bg hover:bg-accent-strong"
               >
-                실행 시작 <ChevronRight size={12} />
+                실행 시작 <ChevronRight size={14} />
               </button>
             </div>
           </div>
