@@ -190,6 +190,15 @@ export default function PipelineWizard() {
   }
 
   function next() {
+    // Diagnostic — if a user reports the button "doesn't work", asking them
+    // to open DevTools console and click will surface exactly what's
+    // happening (e.g., canAdvance returning false on a process step, or
+    // the click never reaching this handler at all).
+    console.log('[PipelineWizard] next() called — idx:', idx,
+      'canAdvance:', canAdvance(),
+      'step.kind:', step.kind,
+      'progress:', progress,
+      'stepDone:', stepDone[idx])
     if (!canAdvance()) return
     if (last) {
       // PHASE 5 stub: when backend creates scan, nav(`/scans/${newScanId}`) instead.
@@ -285,6 +294,37 @@ export default function PipelineWizard() {
                   toothFdi={tooth}
                 />
               )}
+
+              {/* Inline action row — ALSO present at the end of every step so the
+                  user never depends on the fixed footer being clickable. Some
+                  monitor / DPI / extension combinations were intercepting the
+                  fixed footer's hit-test; this in-flow row is guaranteed
+                  reachable because it scrolls with the body content. */}
+              <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+                <button
+                  type="button"
+                  onClick={prev}
+                  disabled={idx === 0}
+                  className="btn disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  {idx === 0 ? '이전' : STEPS[idx - 1].t}
+                </button>
+                <div className="flex items-center gap-3">
+                  {!canAdvance() && disabledHint() && (
+                    <span className="font-mono text-[10.5px] text-faint">{disabledHint()}</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={next}
+                    disabled={!canAdvance()}
+                    className="btn btn-primary !px-6 !py-2 text-[13px] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {last ? '완료 · 콘솔에서 보기' : '다음 단계'}
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -297,10 +337,10 @@ export default function PipelineWizard() {
           (76px, set inline to bypass Tailwind purge / DPI math). Pinned
           to bottom:0 of the viewport; no parent height math required. */}
       <div
-        className="fixed bottom-0 right-0 z-30 flex items-center justify-between border-t border-line bg-panel px-6 py-3 shadow-[0_-4px_12px_-6px_rgba(0,0,0,0.18)]"
+        className="fixed bottom-0 right-0 z-30 flex items-center justify-between border-t border-line bg-panel px-6 py-3 shadow-[0_-4px_12px_-6px_rgba(0,0,0,0.18)] pointer-events-auto"
         style={{ left: 76 }}
       >
-        <button onClick={prev} disabled={idx === 0}
+        <button type="button" onClick={prev} disabled={idx === 0}
           className="btn disabled:cursor-not-allowed disabled:opacity-40">
           <ChevronLeft className="h-3.5 w-3.5" />
           {idx === 0 ? '이전' : STEPS[idx - 1].t}
@@ -310,7 +350,7 @@ export default function PipelineWizard() {
           {!canAdvance() && disabledHint() && (
             <span className="font-mono text-[10.5px] text-faint">{disabledHint()}</span>
           )}
-          <button onClick={next} disabled={!canAdvance()}
+          <button type="button" onClick={next} disabled={!canAdvance()}
             className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-40">
             {last ? '완료 · 콘솔에서 보기' : '다음 단계'}
             <ChevronRight className="h-3.5 w-3.5" />
