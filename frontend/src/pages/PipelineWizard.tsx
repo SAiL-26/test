@@ -190,15 +190,6 @@ export default function PipelineWizard() {
   }
 
   function next() {
-    // Diagnostic — if a user reports the button "doesn't work", asking them
-    // to open DevTools console and click will surface exactly what's
-    // happening (e.g., canAdvance returning false on a process step, or
-    // the click never reaching this handler at all).
-    console.log('[PipelineWizard] next() called — idx:', idx,
-      'canAdvance:', canAdvance(),
-      'step.kind:', step.kind,
-      'progress:', progress,
-      'stepDone:', stepDone[idx])
     if (!canAdvance()) return
     if (last) {
       // PHASE 5 stub: when backend creates scan, nav(`/scans/${newScanId}`) instead.
@@ -222,21 +213,10 @@ export default function PipelineWizard() {
     return parts.join('\n')
   }, [step, name, mrn, sex, age, cc, tooth, quadrant, implantNote])
 
-  // NUCLEAR OPTION — viewport-fixed footer.
-  // Prior attempts (flex-h-full sticky, grid-rows + sticky bottom, plain
-  // flex + overflow body) all failed on at least one user monitor. Root
-  // cause is brittle: any single mis-applied min-h-0 anywhere in the
-  // ancestor chain (Layout <main>, AiSidebar grid track, intrinsic content
-  // height of progress strip, subpixel rounding at non-100% DPI) lets the
-  // body inflate and pushes the footer below the viewport.
-  //
-  // Solution: take the footer OUT of the flex/grid chain entirely. Pin it
-  // to the bottom of the viewport with position:fixed, offset its left
-  // edge by NavRail width (76px) via inline style (bypasses Tailwind class
-  // pruning / DPI subpixel issues), and reserve a 96px bottom pad on the
-  // body so the last content row never hides under the fixed bar. The
-  // footer is now positioned relative to the viewport — independent of
-  // every ancestor's height calculation. Cannot fail.
+  // Single in-flow action row at the end of each step's body content.
+  // No viewport-fixed footer — the inline row is guaranteed clickable
+  // because it scrolls with the body and never relies on parent height
+  // math, hit-testing, or z-index. One button, one place, no duplicates.
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
@@ -258,10 +238,8 @@ export default function PipelineWizard() {
         <StepProgress idx={idx} stepDone={stepDone} />
       </div>
 
-      {/* Body — single scroll container. Bottom padding = footer height
-          (~56px) + buffer so the last row of content clears the fixed
-          footer on every viewport. */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-[96px]">
+      {/* Body — single scroll container with inline action row at the end. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-6">
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="surface flex min-w-0 flex-col">
             <div className="border-b border-line-soft px-7 pt-6 pb-3">
@@ -295,11 +273,7 @@ export default function PipelineWizard() {
                 />
               )}
 
-              {/* Inline action row — ALSO present at the end of every step so the
-                  user never depends on the fixed footer being clickable. Some
-                  monitor / DPI / extension combinations were intercepting the
-                  fixed footer's hit-test; this in-flow row is guaranteed
-                  reachable because it scrolls with the body content. */}
+              {/* Single action row — scrolls with body, always reachable. */}
               <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
                 <button
                   type="button"
@@ -311,6 +285,7 @@ export default function PipelineWizard() {
                   {idx === 0 ? '이전' : STEPS[idx - 1].t}
                 </button>
                 <div className="flex items-center gap-3">
+                  <span className="font-mono text-[10.5px] text-faint">{idx + 1} / {STEPS.length}</span>
                   {!canAdvance() && disabledHint() && (
                     <span className="font-mono text-[10.5px] text-faint">{disabledHint()}</span>
                   )}
@@ -329,32 +304,6 @@ export default function PipelineWizard() {
           </div>
 
           <AiSidebar step={step} idx={idx} context={caseContext} />
-        </div>
-      </div>
-
-      {/* Footer — VIEWPORT-FIXED. Sits above the body via z-30 (modals use
-          z-50 so dialogs still cover it). Left offset = NavRail width
-          (76px, set inline to bypass Tailwind purge / DPI math). Pinned
-          to bottom:0 of the viewport; no parent height math required. */}
-      <div
-        className="fixed bottom-0 right-0 z-30 flex items-center justify-between border-t border-line bg-panel px-6 py-3 shadow-[0_-4px_12px_-6px_rgba(0,0,0,0.18)] pointer-events-auto"
-        style={{ left: 76 }}
-      >
-        <button type="button" onClick={prev} disabled={idx === 0}
-          className="btn disabled:cursor-not-allowed disabled:opacity-40">
-          <ChevronLeft className="h-3.5 w-3.5" />
-          {idx === 0 ? '이전' : STEPS[idx - 1].t}
-        </button>
-        <span className="font-mono text-[10.5px] text-faint">{idx + 1} / {STEPS.length}</span>
-        <div className="flex items-center gap-3">
-          {!canAdvance() && disabledHint() && (
-            <span className="font-mono text-[10.5px] text-faint">{disabledHint()}</span>
-          )}
-          <button type="button" onClick={next} disabled={!canAdvance()}
-            className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-40">
-            {last ? '완료 · 콘솔에서 보기' : '다음 단계'}
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
         </div>
       </div>
     </div>
