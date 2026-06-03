@@ -213,18 +213,15 @@ export default function PipelineWizard() {
     return parts.join('\n')
   }, [step, name, mrn, sex, age, cc, tooth, quadrant, implantNote])
 
+  // Simple, bulletproof sticky-footer pattern.
+  // OUTER: flex column filling the parent (Layout's <main>). Header,
+  // progress, and footer are shrink-0 (intrinsic height). The body row is
+  // flex-1 + min-h-0 + overflow-y-auto — it absorbs all overflow internally
+  // so the footer NEVER leaves the viewport, on any monitor size.
   return (
-    // CSS-grid shell with explicit rows guarantees the footer always gets its
-    // own track regardless of body content height. Previous flex+min-h-0 layout
-    // worked in theory but broke on certain monitor heights (1280x720,
-    // split-screen) because the body's min-h-[480px] surface + AI sidebar
-    // overflow conspired with Layout's overflow-hidden <main> to clip the
-    // footer's pixel row. With grid-rows-[auto_auto_minmax(0,1fr)_auto] the
-    // footer track is allocated by the layout engine before the 1fr body row,
-    // so it can never be pushed below the viewport.
-    <div className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto]">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-line bg-panel px-6 py-3">
+      <div className="flex flex-shrink-0 items-center gap-3 border-b border-line bg-panel px-6 py-3">
         <div className="h-6 w-6 rounded-md"
           style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-finding-progressed))' }} />
         <span className="text-[13px] font-semibold tracking-tight text-text-strong">새 스캔 파이프라인</span>
@@ -238,57 +235,56 @@ export default function PipelineWizard() {
       </div>
 
       {/* Step progress */}
-      <div className="px-6 pt-4 pb-2">
+      <div className="flex-shrink-0 px-6 pt-4 pb-2">
         <StepProgress idx={idx} stepDone={stepDone} />
       </div>
 
-      {/* Body — sidebar collapses below the main pane on narrow viewports
-          (< 1280 px). The outer shell is now a grid with an explicit footer
-          row, so this body region is ALWAYS bounded by the 1fr track and
-          its overflow-y-auto handles any content overflow internally. */}
-      <div className="grid min-h-0 grid-cols-1 gap-5 overflow-y-auto px-6 pt-3 pb-2 xl:grid-cols-[minmax(0,1fr)_320px] xl:overflow-hidden">
-        <div className="surface relative flex min-h-[320px] min-w-0 flex-col overflow-hidden xl:min-h-0">
-          <div className="flex-shrink-0 border-b border-line-soft px-7 pt-6 pb-3">
-            <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">
-              <step.icon className="h-3.5 w-3.5" />
-              STEP {step.k} · {step.en}
+      {/* Body — single scroll container; AI sidebar stacks below main pane
+          on narrow viewports, switches to right column at xl+. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-4">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="surface flex min-w-0 flex-col">
+            <div className="border-b border-line-soft px-7 pt-6 pb-3">
+              <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">
+                <step.icon className="h-3.5 w-3.5" />
+                STEP {step.k} · {step.en}
+              </div>
+              <h2 className="editorial mt-1.5 text-[28px] leading-tight text-text-strong">{step.t}</h2>
+              <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted">{step.desc}</p>
             </div>
-            <h2 className="editorial mt-1.5 text-[28px] leading-tight text-text-strong">{step.t}</h2>
-            <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted">{step.desc}</p>
+
+            <div className="px-7 pt-5 pb-7">
+              {idx === 0 && <RegisterForm {...{ name, setName, sex, setSex, age, setAge, cc, setCc, mrn }} />}
+              {idx === 1 && <ToothPicker {...{ quadrant, setQuadrant, tooth, setTooth, implantNote, setImplantNote }} />}
+              {idx === 2 && <MeshUploadPane files={meshFiles} setFiles={setMeshFiles} />}
+              {idx === 3 && <WaveUploadPane files={waveFiles} setFiles={setWaveFiles} />}
+              {idx === 4 && <ProcessPane step={step} progress={progress} done={stepDone[idx]} visual={<FkFilterViz active={!stepDone[idx]} />} />}
+              {idx === 5 && <ProcessPane step={step} progress={progress} done={stepDone[idx]} visual={<LowVelocityViz active={!stepDone[idx]} />} />}
+              {idx === 6 && <ProcessPane step={step} progress={progress} done={stepDone[idx]} visual={<McmcViz active={!stepDone[idx]} progress={progress} />} />}
+              {idx === 7 && (
+                <ReviewPane
+                  patientName={name || '신규 환자'}
+                  scenarioTag={result.scenarioTag}
+                  severityPct={result.severityPct}
+                  locErrMm={result.locErrMm}
+                  rhat={result.rhat}
+                  ess={result.ess}
+                  misfit={result.misfit}
+                  toothLabel={tooth ? `#${tooth} (${labelForFdi(tooth)})` : '전악 스크리닝'}
+                  toothFdi={tooth}
+                />
+              )}
+            </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-auto px-7 pt-5 pb-7">
-            {idx === 0 && <RegisterForm {...{ name, setName, sex, setSex, age, setAge, cc, setCc, mrn }} />}
-            {idx === 1 && <ToothPicker {...{ quadrant, setQuadrant, tooth, setTooth, implantNote, setImplantNote }} />}
-            {idx === 2 && <MeshUploadPane files={meshFiles} setFiles={setMeshFiles} />}
-            {idx === 3 && <WaveUploadPane files={waveFiles} setFiles={setWaveFiles} />}
-            {idx === 4 && <ProcessPane step={step} progress={progress} done={stepDone[idx]} visual={<FkFilterViz active={!stepDone[idx]} />} />}
-            {idx === 5 && <ProcessPane step={step} progress={progress} done={stepDone[idx]} visual={<LowVelocityViz active={!stepDone[idx]} />} />}
-            {idx === 6 && <ProcessPane step={step} progress={progress} done={stepDone[idx]} visual={<McmcViz active={!stepDone[idx]} progress={progress} />} />}
-            {idx === 7 && (
-              <ReviewPane
-                patientName={name || '신규 환자'}
-                scenarioTag={result.scenarioTag}
-                severityPct={result.severityPct}
-                locErrMm={result.locErrMm}
-                rhat={result.rhat}
-                ess={result.ess}
-                misfit={result.misfit}
-                toothLabel={tooth ? `#${tooth} (${labelForFdi(tooth)})` : '전악 스크리닝'}
-                toothFdi={tooth}
-              />
-            )}
-          </div>
+          <AiSidebar step={step} idx={idx} context={caseContext} />
         </div>
-
-        <AiSidebar step={step} idx={idx} context={caseContext} />
       </div>
 
-      {/* Footer — sticky bottom-0 is a belt-and-suspenders guard so the
-          row stays pinned even if a future change reintroduces an
-          overflowing ancestor; with the parent grid's explicit footer
-          track it should not be strictly necessary, but it is safe. */}
-      <div className="sticky bottom-0 z-10 flex items-center justify-between border-t border-line bg-panel px-6 py-3">
+      {/* Footer — flex-shrink-0 keeps it pinned to the bottom of the
+          column; the body above absorbs all overflow so the footer cannot
+          be pushed off-screen on any monitor size. */}
+      <div className="flex flex-shrink-0 items-center justify-between border-t border-line bg-panel px-6 py-3">
         <button onClick={prev} disabled={idx === 0}
           className="btn disabled:cursor-not-allowed disabled:opacity-40">
           <ChevronLeft className="h-3.5 w-3.5" />
