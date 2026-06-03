@@ -213,11 +213,21 @@ export default function PipelineWizard() {
     return parts.join('\n')
   }, [step, name, mrn, sex, age, cc, tooth, quadrant, implantNote])
 
-  // Simple, bulletproof sticky-footer pattern.
-  // OUTER: flex column filling the parent (Layout's <main>). Header,
-  // progress, and footer are shrink-0 (intrinsic height). The body row is
-  // flex-1 + min-h-0 + overflow-y-auto — it absorbs all overflow internally
-  // so the footer NEVER leaves the viewport, on any monitor size.
+  // NUCLEAR OPTION — viewport-fixed footer.
+  // Prior attempts (flex-h-full sticky, grid-rows + sticky bottom, plain
+  // flex + overflow body) all failed on at least one user monitor. Root
+  // cause is brittle: any single mis-applied min-h-0 anywhere in the
+  // ancestor chain (Layout <main>, AiSidebar grid track, intrinsic content
+  // height of progress strip, subpixel rounding at non-100% DPI) lets the
+  // body inflate and pushes the footer below the viewport.
+  //
+  // Solution: take the footer OUT of the flex/grid chain entirely. Pin it
+  // to the bottom of the viewport with position:fixed, offset its left
+  // edge by NavRail width (76px) via inline style (bypasses Tailwind class
+  // pruning / DPI subpixel issues), and reserve a 96px bottom pad on the
+  // body so the last content row never hides under the fixed bar. The
+  // footer is now positioned relative to the viewport — independent of
+  // every ancestor's height calculation. Cannot fail.
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
@@ -239,9 +249,10 @@ export default function PipelineWizard() {
         <StepProgress idx={idx} stepDone={stepDone} />
       </div>
 
-      {/* Body — single scroll container; AI sidebar stacks below main pane
-          on narrow viewports, switches to right column at xl+. */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-4">
+      {/* Body — single scroll container. Bottom padding = footer height
+          (~56px) + buffer so the last row of content clears the fixed
+          footer on every viewport. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3 pb-[96px]">
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="surface flex min-w-0 flex-col">
             <div className="border-b border-line-soft px-7 pt-6 pb-3">
@@ -281,10 +292,14 @@ export default function PipelineWizard() {
         </div>
       </div>
 
-      {/* Footer — flex-shrink-0 keeps it pinned to the bottom of the
-          column; the body above absorbs all overflow so the footer cannot
-          be pushed off-screen on any monitor size. */}
-      <div className="flex flex-shrink-0 items-center justify-between border-t border-line bg-panel px-6 py-3">
+      {/* Footer — VIEWPORT-FIXED. Sits above the body via z-30 (modals use
+          z-50 so dialogs still cover it). Left offset = NavRail width
+          (76px, set inline to bypass Tailwind purge / DPI math). Pinned
+          to bottom:0 of the viewport; no parent height math required. */}
+      <div
+        className="fixed bottom-0 right-0 z-30 flex items-center justify-between border-t border-line bg-panel px-6 py-3 shadow-[0_-4px_12px_-6px_rgba(0,0,0,0.18)]"
+        style={{ left: 76 }}
+      >
         <button onClick={prev} disabled={idx === 0}
           className="btn disabled:cursor-not-allowed disabled:opacity-40">
           <ChevronLeft className="h-3.5 w-3.5" />
