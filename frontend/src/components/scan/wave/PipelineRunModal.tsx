@@ -156,9 +156,16 @@ export default function PipelineRunModal({ onClose, onComplete, caseId }: Props)
           </button>
         </header>
 
-        {/* CONFIG MODE */}
+        {/* CONFIG MODE — split into a scrolling content region + a sticky
+            action footer so the 실행 시작 button is ALWAYS visible. The
+            previous layout used mt-auto inside an overflow-auto container
+            which only pushed buttons to the end of the SCROLL content, not
+            the visible viewport — on shorter screens (720px tall laptops,
+            split-screen, 1440x900 with browser chrome) the action row sat
+            below the fold with no visible scroll affordance. */}
         {mode === 'config' && (
-          <div className="flex min-h-0 flex-1 flex-col overflow-auto px-6 py-5">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
             <div className="grid grid-cols-2 gap-5">
               <ParamCard
                 icon={<GitBranch size={14} className="text-accent" />}
@@ -267,7 +274,10 @@ export default function PipelineRunModal({ onClose, onComplete, caseId }: Props)
               </div>
             </div>
 
-            <div className="mt-auto flex items-center justify-end gap-2 pt-5">
+            </div>
+            {/* Action row — outside the scrolling region so it is always
+                visible regardless of viewport height. */}
+            <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t border-line bg-panel-2/60 px-6 py-3">
               <button
                 onClick={() => setParams(DEFAULT_PARAMS)}
                 className="rounded-md border border-line bg-panel-2 px-3 py-1.5 text-xs text-muted hover:border-accent hover:text-text"

@@ -24,7 +24,13 @@ export default function SnapshotGridPane({ caseId, times, autoplay = false, comp
   const idx = controlledIdx ?? internalIdx
   const isControlled = controlledIdx != null
   const [playing, setPlaying] = useState(autoplay)
-  const [showTissue, setShowTissue] = useState(true)
+  // Tissue meshes (tooth+bone+gingiva) are 1.46 MB / ~1.3 s to fetch and
+  // add three heavy mesh3d traces (~10k triangles each) to the Plotly
+  // scene. Default OFF so the snapshot pane paints the wavefield surface
+  // immediately on console entry; the eye-icon toggle in the header still
+  // lets the user opt in. This was the single largest piece of non-Plotly
+  // network blocking on /scans/:id.
+  const [showTissue, setShowTissue] = useState(false)
   const [camera, setCamera] = useState<CameraKey>('default')
   const [grid, setGrid] = useState<SnapshotGrid | undefined>()
   const cache = useRef(new Map<string, SnapshotGrid>())

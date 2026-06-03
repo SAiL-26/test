@@ -1,20 +1,51 @@
-import { useEffect, useRef } from 'react'
-// Plotly is heavy (~1.4 MB gzipped) — vite.config.ts manualChunks pins it
-// to its own `plotly` chunk so a top-level import here doesn't bloat the
-// initial bundle. Combined with React.lazy() on every chart-using route
-// (see App.tsx), the chunk only downloads when the user opens a chart.
-import Plotly from 'plotly.js-dist-min'
+import { useEffect, useRef, useState } from 'react'
+// Plotly is heavy (~4.4 MB minified / ~1.4 MB gzipped). Even with
+// React.lazy() on every chart-using route, a top-level `import Plotly`
+// here forces Rollup to pull the plotly chunk into the route's import
+// graph — so /scans/:id waits ~1-2 s for the bundle to download + parse
+// before WaveWorkspace can render *any* skeleton at all.
+//
+// Instead we dynamic-import Plotly inside the first effect. The module
+// resolves once and is cached on `plotlyPromise`, so subsequent chart
+// mounts within the same session share the single in-flight (or already
+// resolved) chunk. Each chart shows a lightweight skeleton until Plotly
+// is ready, giving the user perceived progress while the chunk streams.
+// The `plotly.js-dist-min` package's TS types are partial — they don't
+// expose `react`, `purge`, or `relayout` on the default export shape.
+// We narrow to the runtime functions we actually call.
+interface PlotlyNS {
+  react: (el: Element, data: unknown, layout: unknown, config: unknown) => Promise<unknown>
+  purge: (el: Element) => void
+  relayout: (el: Element, update: Record<string, unknown>) => void
+}
+let plotlyPromise: Promise<PlotlyNS> | null = null
+function loadPlotly(): Promise<PlotlyNS> {
+  if (!plotlyPromise) {
+    plotlyPromise = import('plotly.js-dist-min').then((m) => {
+      // The package exposes the API on `default` in ESM and on the module
+      // root in CJS — accept either shape.
+      const ns = (m as { default?: unknown }).default ?? m
+      return ns as PlotlyNS
+    })
+  }
+  return plotlyPromise
+}
+
+type PlotlyData = unknown
+type PlotlyLayout = Record<string, unknown>
+type PlotlyConfig = Record<string, unknown>
+type PlotlySelectionEvent = unknown
 
 interface Props {
-  data: Plotly.Data[]
-  layout?: Partial<Plotly.Layout>
-  config?: Partial<Plotly.Config>
+  data: PlotlyData[]
+  layout?: Partial<PlotlyLayout>
+  config?: Partial<PlotlyConfig>
   className?: string
-  onSelected?: (e: Plotly.PlotSelectionEvent) => void
+  onSelected?: (e: PlotlySelectionEvent) => void
   onDeselect?: () => void
 }
 
-const DEFAULT_CONFIG: Partial<Plotly.Config> = {
+const DEFAULT_CONFIG: Partial<PlotlyConfig> = {
   // Plotly's built-in modebar covers Phase 4.3 PNG/SVG export at zero code cost.
   displayModeBar: 'hover',
   modeBarButtonsToRemove: [
@@ -39,8 +70,23 @@ export default function PlotlyChart({
   const ref = useRef<HTMLDivElement>(null)
   const onSelRef = useRef(onSelected)
   const onDesRef = useRef(onDeselect)
+  const [plotly, setPlotly] = useState<PlotlyNS | null>(null)
   useEffect(() => { onSelRef.current = onSelected }, [onSelected])
   useEffect(() => { onDesRef.current = onDeselect }, [onDeselect])
+
+  // Kick off the Plotly chunk download once on first mount of any chart.
+  // Subsequent mounts in the same session share the cached promise so each
+  // pane resolves nearly instantly after the first one.
+  useEffect(() => {
+    let cancelled = false
+    loadPlotly().then((mod) => {
+      if (cancelled) return
+      setPlotly(mod)
+    }).catch((err) => {
+      console.error('Plotly module load failed:', err)
+    })
+    return () => { cancelled = true }
+  }, [])
 
   // Render the chart. `Plotly.react` returns a Promise — wait for it before
   // attaching event handlers, since the event-emitter methods (`.on`,
@@ -48,7 +94,8 @@ export default function PlotlyChart({
   // out. Skipping the await caused "el.on is not a function" on cold renders,
   // which ErrorBoundary surfaced as "화면 렌더링 오류".
   useEffect(() => {
-    if (!ref.current) return
+    if (!ref.current || !plotly) return
+    const Plotly = plotly
     const el = ref.current as PlotlyEl
     let cancelled = false
     // Wrap the sync portion of Plotly.react in try/catch — invalid layout
@@ -65,14 +112,14 @@ export default function PlotlyChart({
             el.removeAllListeners?.('plotly_selected')
             el.removeAllListeners?.('plotly_deselect')
             if (typeof el.on === 'function') {
-              el.on('plotly_selected', (e) => onSelRef.current?.(e as Plotly.PlotSelectionEvent))
+              el.on('plotly_selected', (e) => onSelRef.current?.(e as PlotlySelectionEvent))
               el.on('plotly_deselect', () => onDesRef.current?.())
             }
           } catch (err) {
             console.warn('Plotly event-handler attach failed:', err)
           }
         })
-        .catch((err) => {
+        .catch((err: unknown) => {
           if (cancelled) return
           console.error('Plotly.react failed:', err)
         })
@@ -80,7 +127,7 @@ export default function PlotlyChart({
       console.error('Plotly.react sync throw:', err)
     }
     return () => { cancelled = true }
-  }, [data, layout, config])
+  }, [data, layout, config, plotly])
 
   // Force the chart to match container dimensions exactly. `Plotly.Plots.resize`
   // alone doesn't always re-fit 3D scenes or panels that grew significantly
@@ -88,15 +135,15 @@ export default function PlotlyChart({
   // Calling `Plotly.relayout(el, {width, height})` with explicit pixels from
   // getBoundingClientRect overrides that cache reliably.
   useEffect(() => {
-    if (!ref.current) return
+    if (!ref.current || !plotly) return
+    const Plotly = plotly
     const tryResize = () => {
       const el = ref.current as PlotlyEl | null
       if (!el || !el._fullLayout) return
       const rect = el.getBoundingClientRect()
       if (rect.width < 2 || rect.height < 2) return
       try {
-        (Plotly as unknown as { relayout: (el: Element, update: Record<string, unknown>) => void })
-          .relayout(el, { width: rect.width, height: rect.height, autosize: true })
+        Plotly.relayout(el, { width: rect.width, height: rect.height, autosize: true })
       } catch (err) {
         console.warn('Plotly relayout failed:', err)
       }
@@ -116,18 +163,24 @@ export default function PlotlyChart({
       window.removeEventListener('resize', tryResize)
       kicks.forEach(clearTimeout)
     }
-  }, [])
+  }, [plotly])
 
   // Clean up the Plotly instance when the component unmounts so the next
   // mount on the same div doesn't inherit a stale chart.
   useEffect(() => {
     const el = ref.current
     return () => {
-      if (el) {
-        try { Plotly.purge(el) } catch { /* noop */ }
+      if (el && plotly) {
+        try { plotly.purge(el) } catch { /* noop */ }
       }
     }
-  }, [])
+  }, [plotly])
 
-  return <div ref={ref} className={className ?? 'h-full w-full'} />
+  return (
+    <div ref={ref} className={className ?? 'h-full w-full'}>
+      {!plotly && (
+        <div className="skeleton h-full w-full rounded-md" aria-label="차트 로딩 중" />
+      )}
+    </div>
+  )
 }

@@ -214,9 +214,17 @@ export default function PipelineWizard() {
   }, [step, name, mrn, sex, age, cc, tooth, quadrant, implantNote])
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    // CSS-grid shell with explicit rows guarantees the footer always gets its
+    // own track regardless of body content height. Previous flex+min-h-0 layout
+    // worked in theory but broke on certain monitor heights (1280x720,
+    // split-screen) because the body's min-h-[480px] surface + AI sidebar
+    // overflow conspired with Layout's overflow-hidden <main> to clip the
+    // footer's pixel row. With grid-rows-[auto_auto_minmax(0,1fr)_auto] the
+    // footer track is allocated by the layout engine before the 1fr body row,
+    // so it can never be pushed below the viewport.
+    <div className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto]">
       {/* Header */}
-      <div className="flex flex-shrink-0 items-center gap-3 border-b border-line bg-panel px-6 py-3">
+      <div className="flex items-center gap-3 border-b border-line bg-panel px-6 py-3">
         <div className="h-6 w-6 rounded-md"
           style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-finding-progressed))' }} />
         <span className="text-[13px] font-semibold tracking-tight text-text-strong">새 스캔 파이프라인</span>
@@ -230,18 +238,16 @@ export default function PipelineWizard() {
       </div>
 
       {/* Step progress */}
-      <div className="flex-shrink-0 px-6 pt-4 pb-2">
+      <div className="px-6 pt-4 pb-2">
         <StepProgress idx={idx} stepDone={stepDone} />
       </div>
 
       {/* Body — sidebar collapses below the main pane on narrow viewports
-          (< 1280 px). overflow-y-auto on the grid keeps the footer pinned
-          to the visible viewport even when the AI sidebar grows tall on
-          small monitors — without it, the stacked grid overflowed past
-          the footer and the 다음 단계 button got pushed off-screen on
-          1280-1440 displays. */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 overflow-y-auto px-6 pt-3 pb-2 xl:grid-cols-[minmax(0,1fr)_320px] xl:overflow-hidden">
-        <div className="surface relative flex min-h-[480px] min-w-0 flex-col overflow-hidden xl:min-h-0">
+          (< 1280 px). The outer shell is now a grid with an explicit footer
+          row, so this body region is ALWAYS bounded by the 1fr track and
+          its overflow-y-auto handles any content overflow internally. */}
+      <div className="grid min-h-0 grid-cols-1 gap-5 overflow-y-auto px-6 pt-3 pb-2 xl:grid-cols-[minmax(0,1fr)_320px] xl:overflow-hidden">
+        <div className="surface relative flex min-h-[320px] min-w-0 flex-col overflow-hidden xl:min-h-0">
           <div className="flex-shrink-0 border-b border-line-soft px-7 pt-6 pb-3">
             <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">
               <step.icon className="h-3.5 w-3.5" />
@@ -278,8 +284,11 @@ export default function PipelineWizard() {
         <AiSidebar step={step} idx={idx} context={caseContext} />
       </div>
 
-      {/* Footer */}
-      <div className="flex flex-shrink-0 items-center justify-between border-t border-line bg-panel px-6 py-3">
+      {/* Footer — sticky bottom-0 is a belt-and-suspenders guard so the
+          row stays pinned even if a future change reintroduces an
+          overflowing ancestor; with the parent grid's explicit footer
+          track it should not be strictly necessary, but it is safe. */}
+      <div className="sticky bottom-0 z-10 flex items-center justify-between border-t border-line bg-panel px-6 py-3">
         <button onClick={prev} disabled={idx === 0}
           className="btn disabled:cursor-not-allowed disabled:opacity-40">
           <ChevronLeft className="h-3.5 w-3.5" />

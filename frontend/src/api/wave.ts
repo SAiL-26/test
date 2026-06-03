@@ -102,9 +102,17 @@ export async function fetchSnapshotGrid(time: string, caseId: WaveCaseId): Promi
   return data
 }
 
-export async function fetchSeismogramGather(caseId: WaveCaseId): Promise<SeismogramGather> {
+export async function fetchSeismogramGather(
+  caseId: WaveCaseId,
+  maxTimeRows = 200,
+): Promise<SeismogramGather> {
+  // The default backend bundle is 600 time rows × 100 receivers ≈ 882 KB
+  // / ~3 s on a wired demo network. The polar seismogram canvas is ~560 px
+  // tall and the heatmap pane caps at ~400 px, so 200 rows is already
+  // beyond display resolution and cuts payload to ~300 KB / ~1 s. The
+  // backend supports max_time_rows up to 2000 if a chart ever needs more.
   const { data } = await api.get<SeismogramGather>('/wave/seismogram/gather', {
-    params: { case: caseId },
+    params: { case: caseId, max_time_rows: maxTimeRows },
   })
   return data
 }
