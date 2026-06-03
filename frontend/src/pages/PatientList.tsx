@@ -186,9 +186,16 @@ function PatientCard({ p, toneColor }: { p: Patient; toneColor: string }) {
   // Warm the patient + scan-list caches on hover so the detail page paints
   // instantly when the user clicks. Cheap (~2 small JSON requests) and
   // self-deduplicating via React Query's prefetch.
+  //
+  // We also dynamic-import the scan-viewer + chart components so the heavy
+  // Plotly chunk (~1.4 MB gzipped) starts streaming the moment the user
+  // shows intent, not when they click. This is the single biggest perceived
+  // latency win: by the time the click lands, the chunk is already cached.
   function prefetch() {
     qc.prefetchQuery({ queryKey: ['patient', p.id], queryFn: () => fetchPatient(p.id), staleTime: 30_000 })
     qc.prefetchQuery({ queryKey: ['scans', p.id], queryFn: () => fetchScans(p.id), staleTime: 30_000 })
+    void import('../pages/ScanViewer')
+    void import('../pages/TimelineView')
   }
 
   return (

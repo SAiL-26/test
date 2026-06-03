@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Eye, EyeOff, GitBranch, Pause, Play, RotateCcw } from 'lucide-react'
 import PlotlyChart from './PlotlyChart'
 import { WAVE_COLORS, basePlotlyLayout } from '../../../lib/wavePalette'
 import type { McmcBackground, McmcTrace } from '../../../api/wave'
-import McmcParticleField from './McmcParticleField'
+
+// McmcParticleField pulls three.js + @react-three/fiber + drei + postprocessing
+// (~1.5 MB). Lazy-load so the rest of the inversion pane (Plotly charts +
+// controls) paints immediately while three.js streams in the background.
+const McmcParticleField = lazy(() => import('./McmcParticleField'))
 
 const FRAME_MS = 80
 const BASE_ITERS_PER_FRAME = 5
@@ -207,14 +211,16 @@ export default function InversionPane({ trace, background }: Props) {
           </div>
           <div className="grid min-h-0 flex-1 grid-cols-2 gap-2">
             <div className="overflow-hidden rounded-md">
-              <McmcParticleField
-                trace={trace}
-                background={background}
-                n={n}
-                showMode={showMode}
-                showBest={showBest}
-                showWalk={showWalk}
-              />
+              <Suspense fallback={<div className="skeleton h-full w-full" />}>
+                <McmcParticleField
+                  trace={trace}
+                  background={background}
+                  n={n}
+                  showMode={showMode}
+                  showBest={showBest}
+                  showWalk={showWalk}
+                />
+              </Suspense>
             </div>
             <PlotlyChart data={misfitTraces} layout={misfitLayout} className="h-full w-full" />
           </div>

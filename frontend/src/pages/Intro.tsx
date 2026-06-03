@@ -68,6 +68,7 @@ export default function Intro() {
               title="임상 콘솔"
               desc="의사·환자용 — 검토·진단·기록"
               onClick={() => nav('/')}
+              onPrefetch={() => { void import('../pages/ScanViewer') }}
             />
             <EntryCard
               icon={<Sparkles className="h-[21px] w-[21px] text-white" strokeWidth={1.8} />}
@@ -75,6 +76,7 @@ export default function Intro() {
               title="심층 분석 모드"
               desc="이론·물리·역산 심층 분석 (연구)"
               onClick={() => nav('/lab')}
+              onPrefetch={() => { void import('../pages/ResearchLab') }}
             />
             <EntryCard
               icon={<Bell className="h-[21px] w-[21px] text-white" strokeWidth={1.8} />}
@@ -98,7 +100,7 @@ export default function Intro() {
 }
 
 function EntryCard({
-  icon, gradient, title, desc, onClick, primary,
+  icon, gradient, title, desc, onClick, primary, onPrefetch,
 }: {
   icon: React.ReactNode
   gradient?: string
@@ -106,10 +108,13 @@ function EntryCard({
   desc: string
   onClick: () => void
   primary?: boolean
+  onPrefetch?: () => void
 }) {
   return (
     <button
       onClick={onClick}
+      onMouseEnter={onPrefetch}
+      onFocus={onPrefetch}
       className={
         'group flex items-center gap-3.5 rounded-[14px] p-4 text-left transition ' +
         (primary

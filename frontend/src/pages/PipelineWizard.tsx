@@ -170,17 +170,23 @@ export default function PipelineWizard() {
     return () => { if (timerRef.current != null) window.clearInterval(timerRef.current) }
   }, [idx, step.kind, step.durationMs, stepDone])
 
+  // Permissive gating — form steps never block (user can revisit any step);
+  // process steps wait for the simulated progress to finish; review is final.
+  // The previous strict gating left users stuck on step 0 with an unlit
+  // 다음 단계 button when they hadn't typed name/age — confusing UX.
   function canAdvance(): boolean {
-    if (step.kind === 'form') {
-      if (idx === 0) return !!(name.trim() && age.trim())
-      if (idx === 2) return meshFiles.stl && meshFiles.meta
-      if (idx === 3) return waveFiles.bin && waveFiles.dat
-      return true
-    }
     if (step.kind === 'process') {
       return progress >= 1 || stepDone[idx]
     }
     return true
+  }
+
+  // Hint shown next to the disabled 다음 단계 button so the user knows why.
+  function disabledHint(): string | null {
+    if (step.kind === 'process' && !(progress >= 1 || stepDone[idx])) {
+      return `${Math.round(progress * 100)}% — 처리 중`
+    }
+    return null
   }
 
   function next() {
@@ -277,11 +283,16 @@ export default function PipelineWizard() {
           {idx === 0 ? '이전' : STEPS[idx - 1].t}
         </button>
         <span className="font-mono text-[10.5px] text-faint">{idx + 1} / {STEPS.length}</span>
-        <button onClick={next} disabled={!canAdvance()}
-          className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-40">
-          {last ? '완료 · 콘솔에서 보기' : '다음 단계'}
-          <ChevronRight className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center gap-3">
+          {!canAdvance() && disabledHint() && (
+            <span className="font-mono text-[10.5px] text-faint">{disabledHint()}</span>
+          )}
+          <button onClick={next} disabled={!canAdvance()}
+            className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-40">
+            {last ? '완료 · 콘솔에서 보기' : '다음 단계'}
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   )

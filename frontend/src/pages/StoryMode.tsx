@@ -23,8 +23,10 @@ import type {
 import type { ScanDetail, ScenarioTag } from '../api/types'
 import StageSlicePreview from '../components/scan/wave/StageSlicePreview'
 import PolarSeismogram from '../components/scan/wave/PolarSeismogram'
-import McmcParticleField from '../components/scan/wave/McmcParticleField'
 import ScreeningSurfacePane from '../components/scan/wave/ScreeningSurfacePane'
+// Lazy: three.js + R3F + drei + postprocessing (~1.5 MB) only when MCMC step
+// is visible during scrollytelling.
+const McmcParticleField = React.lazy(() => import('../components/scan/wave/McmcParticleField'))
 import {
   STORY_STEPS_CLINICAL,
   type StoryAudience,
@@ -307,12 +309,14 @@ function StickyVisual(props: VizProps) {
     )
     const mcmc = mcmcTrace ? (
       <div key="mcmc" className="h-full w-full overflow-hidden">
-        <McmcParticleField
-          trace={mcmcTrace}
-          background={mcmcBg}
-          n={Math.max(50, Math.floor(totalIters * progress))}
-          showMode showBest showWalk
-        />
+        <React.Suspense fallback={<div className="skeleton h-full w-full" />}>
+          <McmcParticleField
+            trace={mcmcTrace}
+            background={mcmcBg}
+            n={Math.max(50, Math.floor(totalIters * progress))}
+            showMode showBest showWalk
+          />
+        </React.Suspense>
       </div>
     ) : (
       <div key="mcmc-empty" className="flex h-full items-center justify-center text-xs text-muted">
