@@ -1,8 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronRight, GitCompareArrows } from 'lucide-react'
-import { fetchPatient, fetchScans } from '../api/endpoints'
+import { fetchPatient, fetchScan, fetchScans } from '../api/endpoints'
+import {
+  fetchEnergyProfile, fetchMcmcBackground, fetchMcmcTrace,
+  fetchScreeningSurface, fetchSeismogramGather, fetchVelocitySlice,
+  fetchWaveMetadata,
+} from '../api/wave'
+import type { WaveCaseId } from '../api/wave'
 import type { Scan, ScenarioTag } from '../api/types'
+
+const SCENARIO_TO_CASE: Record<ScenarioTag, WaveCaseId> = { healthy: 1, inf70: 2, inf80: 3 }
 
 function scenarioMeta(s: ScenarioTag) {
   switch (s) {
@@ -14,9 +22,29 @@ function scenarioMeta(s: ScenarioTag) {
 
 function ScanRow({ scan }: { scan: Scan }) {
   const m = scenarioMeta(scan.scenario_tag)
+  const qc = useQueryClient()
+
+  // On hover/focus, warm the scan detail + every wave bundle the console will
+  // request. Wave responses are now cache-controlled `immutable` on the
+  // backend, so a successful prefetch makes the console render with cached
+  // data on click — no waiting on MBs of JSON.
+  function prefetch() {
+    const caseId = SCENARIO_TO_CASE[scan.scenario_tag] ?? 1
+    qc.prefetchQuery({ queryKey: ['scan', scan.id], queryFn: () => fetchScan(scan.id), staleTime: 60_000 })
+    qc.prefetchQuery({ queryKey: ['wave', 'metadata'], queryFn: fetchWaveMetadata, staleTime: Infinity })
+    qc.prefetchQuery({ queryKey: ['wave', 'seismogram', caseId], queryFn: () => fetchSeismogramGather(caseId), staleTime: Infinity })
+    qc.prefetchQuery({ queryKey: ['wave', 'energy', caseId], queryFn: () => fetchEnergyProfile(caseId), staleTime: Infinity })
+    qc.prefetchQuery({ queryKey: ['wave', 'velocity', caseId], queryFn: () => fetchVelocitySlice(caseId), staleTime: Infinity })
+    qc.prefetchQuery({ queryKey: ['wave', 'screening', caseId], queryFn: () => fetchScreeningSurface(caseId), staleTime: Infinity })
+    qc.prefetchQuery({ queryKey: ['wave', 'mcmc', caseId], queryFn: () => fetchMcmcTrace(caseId), staleTime: Infinity })
+    qc.prefetchQuery({ queryKey: ['wave', 'mcmc-bg'], queryFn: fetchMcmcBackground, staleTime: Infinity })
+  }
+
   return (
     <Link
       to={`/scans/${scan.id}`}
+      onMouseEnter={prefetch}
+      onFocus={prefetch}
       className="group flex items-center justify-between border-b border-line-soft px-4 py-2.5 transition hover:bg-panel-2"
     >
       <div className="flex items-center gap-3">

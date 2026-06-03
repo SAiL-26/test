@@ -37,6 +37,19 @@ def create_app() -> FastAPI:
     app.include_router(wave_routes.router,    prefix="/api")
     app.include_router(ai_routes.router,      prefix="/api")
 
+    # Wave bundles are deterministic from case ID (precomputed binaries) — let
+    # the browser cache responses aggressively so the second-and-onward visit
+    # to a scan console paints instantly without re-fetching MBs of JSON.
+    @app.middleware("http")
+    async def cache_wave_bundles(request, call_next):  # type: ignore[no-untyped-def]
+        response = await call_next(request)
+        path = request.url.path
+        if path.startswith("/api/wave/") and request.method == "GET":
+            # 1 year + immutable hint — bundle responses never change for a
+            # given case ID, and route changes ship a new front-end build.
+            response.headers["Cache-Control"] = "private, max-age=31536000, immutable"
+        return response
+
     @app.get("/health")
     def health():
         return {"status": "ok"}

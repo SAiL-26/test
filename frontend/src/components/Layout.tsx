@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useMatch } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -36,6 +37,18 @@ export default function Layout() {
   const nav = useNavigate()
   const loc = useLocation()
   useRouteTheme()
+
+  // As soon as the user lands inside the authenticated shell, start streaming
+  // the heavy chunks in the background. Vite already split plotly + three into
+  // their own chunks; the dynamic imports here trigger the network fetch
+  // without putting them on the critical path of any one route. By the time
+  // the user clicks into ScanViewer / Lab / Timeline, the chunks are usually
+  // already cached and the page paints without the 1-2 s download wait.
+  useEffect(() => {
+    if (!user) return
+    void import('plotly.js-dist-min').catch(() => {})
+    void import('../components/scan/wave/McmcParticleField').catch(() => {})
+  }, [user])
 
   // contextual nav: light up Console icon when on /scans/:id
   const onScan = useMatch('/scans/:id/*')
